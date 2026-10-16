@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
@@ -37,6 +38,7 @@ const libraryHtml = readFileSync(join(studioDir, 'library.html'), 'utf8');
 const peopleTemplate = readFileSync(join(studioDir, 'people.html'), 'utf8');
 const studioTemplate = readFileSync(join(studioDir, 'studio.html'), 'utf8');
 const adapterJs = readFileSync(join(studioDir, 'adapter.js'), 'utf8');
+const adapterJsGz = gzipSync(adapterJs, { level: 9 });
 const STUDIO_ANCHOR = '<script src="/vendor/mathjax-tex-svg.js" async></script>\n<script>';
 
 const HTML = 'text/html; charset=utf-8';
@@ -87,20 +89,42 @@ app.get<{ Params: { bookId: string } }>('/book/:bookId/people', async (request, 
   return reply.type(HTML).send(peopleTemplate.replace('<script>', bootstrap + '\n<script>'));
 });
 
-app.get('/adapter.js', async (_request, reply) => reply.type('application/javascript; charset=utf-8').send(adapterJs));
+app.get('/adapter.js', async (request, reply) => {
+  reply.type('application/javascript; charset=utf-8');
+  if (acceptsGzip(request)) {
+    reply.header('content-encoding', 'gzip');
+    return reply.send(adapterJsGz);
+  }
+  return reply.send(adapterJs);
+});
 
+// Pre-gzipped once at startup: these never change at runtime, and the
+// Arvan<->Germany link (an SSH tunnel) is slow enough that shipping the
+// ~2MB MathJax bundle uncompressed made it the dominant cost of opening
+// the studio. nginx also proxy_caches these paths (see nginx/mbooks.conf
+// in the arithland repo), so in practice this tunnel is only hit once.
 const vendorFiles = new Map(
-  ['marked.min.js', 'purify.min.js', 'mathjax-tex-svg.js'].map((name) => [
-    name,
-    readFileSync(join(studioDir, 'vendor', name)),
-  ]),
+  ['marked.min.js', 'purify.min.js', 'mathjax-tex-svg.js'].map((name) => {
+    const raw = readFileSync(join(studioDir, 'vendor', name));
+    return [name, { raw, gz: gzipSync(raw, { level: 9 }) }] as const;
+  }),
 );
 app.get<{ Params: { name: string } }>('/vendor/:name', async (request, reply) => {
   const file = vendorFiles.get(request.params.name);
   if (!file) return reply.code(404).send();
   reply.header('cache-control', 'public, max-age=31536000, immutable');
-  return reply.type('application/javascript; charset=utf-8').send(file);
+  reply.type('application/javascript; charset=utf-8');
+  if (acceptsGzip(request)) {
+    reply.header('content-encoding', 'gzip');
+    return reply.send(file.gz);
+  }
+  return reply.send(file.raw);
 });
+
+function acceptsGzip(request: { headers: Record<string, unknown> }): boolean {
+  const h = request.headers['accept-encoding'];
+  return typeof h === 'string' && h.includes('gzip');
+}
 
 const port = Number(process.env.PORT ?? 3300);
 const host = process.env.HOST ?? '0.0.0.0';
