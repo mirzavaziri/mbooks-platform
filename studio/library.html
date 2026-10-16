@@ -1,0 +1,127 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-books — library</title>
+<style>
+  :root{ color-scheme: light dark; }
+  body{ font-family: system-ui, sans-serif; background:#f4f5f2; color:#1f2a44; margin:0; padding:1.5rem; }
+  @media (prefers-color-scheme: dark){ body{ background:#10141b; color:#e3e6ec; } .card,.panel{ background:#161b24 !important; border-color:#2b3341 !important; } input,select{ background:#0d1117; color:#e3e6ec; border-color:#2b3341 !important; } }
+  .wrap{ max-width:56rem; margin:0 auto; }
+  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap; }
+  h1{ font-size:1.3rem; margin:0; }
+  #who{ font-size:.85rem; opacity:.75; }
+  a.btn, button{ display:inline-block; padding:.5rem .9rem; border-radius:8px; border:1px solid #2f6b5a; background:#2f6b5a; color:#fff; text-decoration:none; font-size:.9rem; cursor:pointer; }
+  button.secondary, a.btn.secondary{ background:transparent; color:#2f6b5a; }
+  .grid{ display:grid; gap:.9rem; grid-template-columns:repeat(auto-fill,minmax(15rem,1fr)); }
+  .card{ background:#fdfdfb; border:1px solid #e8eae5; border-radius:10px; padding:1rem; }
+  .card h3{ margin:.1rem 0 .3rem; font-size:1.05rem; }
+  .card .meta{ font-size:.78rem; opacity:.7; margin-bottom:.6rem; }
+  .card .row{ display:flex; gap:.5rem; margin-top:.6rem; flex-wrap:wrap; }
+  .card .row a{ font-size:.82rem; padding:.3rem .6rem; }
+  .panel{ background:#fdfdfb; border:1px solid #e8eae5; border-radius:10px; padding:1.1rem; margin-top:1.5rem; max-width:26rem; }
+  .panel h2{ font-size:1rem; margin:0 0 .7rem; }
+  label{ display:block; font-size:.82rem; margin:.6rem 0 .25rem; }
+  input, select{ width:100%; padding:.5rem .6rem; border:1px solid #d9ddd6; border-radius:7px; font-size:.95rem; }
+  .msg{ font-size:.82rem; margin-top:.6rem; min-height:1em; }
+  .msg.err{ color:#a4472f; }
+  .msg.ok{ color:#2f6b5a; word-break:break-all; }
+  [hidden]{ display:none !important; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>M-books library</h1>
+    <div>
+      <span id="who"></span>
+      <button class="secondary" id="logout-btn" style="margin-right:.6rem">Sign out</button>
+    </div>
+  </header>
+
+  <div class="grid" id="books-grid"></div>
+
+  <details class="panel">
+    <summary style="cursor:pointer; font-size:.95rem">New book</summary>
+    <label for="nb-slug">Slug (used in the URL of the published book)</label>
+    <input id="nb-slug" placeholder="e.g. shomordaniha">
+    <label for="nb-type">Type</label>
+    <select id="nb-type">
+      <option value="textbook-fa">Persian textbook (RTL)</option>
+      <option value="textbook-en">English textbook (LTR)</option>
+      <option value="fiction-fa">Persian fiction (RTL)</option>
+    </select>
+    <label for="nb-title">Title</label>
+    <input id="nb-title">
+    <button id="nb-create" style="margin-top:.9rem">Create</button>
+    <p class="msg" id="nb-msg"></p>
+  </details>
+
+  <details class="panel" id="admin-panel" hidden>
+    <summary style="cursor:pointer; font-size:.95rem">Invite a new platform user (admin)</summary>
+    <label for="inv-email">Email</label>
+    <input id="inv-email" type="email">
+    <button id="inv-create" style="margin-top:.9rem">Create invite link</button>
+    <p class="msg" id="inv-msg"></p>
+  </details>
+</div>
+
+<script>
+  function get(url) { return fetch(url, { credentials: 'same-origin' }).then(function (r) { return r.json(); }); }
+  function post(url, body) {
+    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); });
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  get('/api/auth/me').then(function (r) {
+    if (!r.user) { location.href = '/login'; return; }
+    document.getElementById('who').textContent = r.user.name + ' · ' + r.user.email;
+    if (r.user.isAdmin) document.getElementById('admin-panel').hidden = false;
+    loadBooks();
+  });
+
+  document.getElementById('logout-btn').onclick = function () {
+    post('/api/auth/logout', {}).then(function () { location.href = '/login'; });
+  };
+
+  var TYPE_LABEL = { 'textbook-fa': 'Persian textbook', 'textbook-en': 'English textbook', 'fiction-fa': 'Persian fiction' };
+
+  function loadBooks() {
+    get('/api/books').then(function (r) {
+      var grid = document.getElementById('books-grid');
+      if (!r.books.length) { grid.innerHTML = '<p style="opacity:.7">No books yet — create one below.</p>'; return; }
+      grid.innerHTML = r.books.map(function (b) {
+        return '<div class="card">' +
+          '<h3>' + esc(b.title || b.slug) + '</h3>' +
+          '<div class="meta">' + esc(TYPE_LABEL[b.type] || b.type) + ' · role: ' + esc(b.role) + '</div>' +
+          '<div class="row">' +
+          '<a class="btn" href="/book/' + b.id + '">Open studio</a>' +
+          '<a class="btn secondary" href="/book/' + b.id + '/people">People</a>' +
+          '</div></div>';
+      }).join('');
+    });
+  }
+
+  document.getElementById('nb-create').onclick = function () {
+    var msg = document.getElementById('nb-msg');
+    msg.className = 'msg'; msg.textContent = '';
+    post('/api/books', {
+      slug: document.getElementById('nb-slug').value.trim(),
+      type: document.getElementById('nb-type').value,
+      title: document.getElementById('nb-title').value.trim(),
+    }).then(function (r) {
+      if (r.ok) { loadBooks(); msg.className = 'msg ok'; msg.textContent = 'Created.'; return; }
+      msg.className = 'msg err';
+      msg.textContent = r.data.error === 'slug_taken' ? 'That slug is already used.' : ('Could not create the book (' + r.data.error + ').');
+    });
+  };
+
+  document.getElementById('inv-create').onclick = function () {
+    var msg = document.getElementById('inv-msg');
+    msg.className = 'msg'; msg.textContent = '';
+    post('/api/admin/invite-platform-user', { email: document.getElementById('inv-email').value.trim() }).then(function (r) {
+      if (!r.ok) { msg.className = 'msg err'; msg.textContent = 'Could not create the invite.'; return; }
+      msg.className = 'msg ok';
+      msg.textContent = 'Send this token to the user, they paste it on the login page: ' + r.data.token;
+    });
+  };
+</script>

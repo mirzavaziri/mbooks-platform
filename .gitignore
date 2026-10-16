@@ -1,0 +1,6 @@
+.env
+.pg_password_dev
+node_modules/
+dist/
+*.log
+/data/

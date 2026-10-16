@@ -1,0 +1,104 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-books — people</title>
+<style>
+  :root{ color-scheme: light dark; }
+  body{ font-family: system-ui, sans-serif; background:#f4f5f2; color:#1f2a44; margin:0; padding:1.5rem; }
+  @media (prefers-color-scheme: dark){ body{ background:#10141b; color:#e3e6ec; } .panel{ background:#161b24 !important; border-color:#2b3341 !important; } input,select{ background:#0d1117; color:#e3e6ec; border-color:#2b3341 !important; } }
+  .wrap{ max-width:36rem; margin:0 auto; }
+  a.back{ font-size:.85rem; color:#2f6b5a; text-decoration:none; }
+  h1{ font-size:1.2rem; margin:.6rem 0 1.2rem; }
+  .panel{ background:#fdfdfb; border:1px solid #e8eae5; border-radius:10px; padding:1rem; margin-bottom:1.2rem; }
+  table{ width:100%; border-collapse:collapse; font-size:.9rem; }
+  td,th{ text-align:left; padding:.4rem .3rem; border-bottom:1px solid #e8eae5; }
+  select, input{ padding:.35rem .5rem; border:1px solid #d9ddd6; border-radius:6px; font-size:.88rem; }
+  button{ padding:.35rem .7rem; border-radius:6px; border:1px solid #a4472f; background:transparent; color:#a4472f; cursor:pointer; font-size:.85rem; }
+  .msg{ font-size:.82rem; margin-top:.6rem; min-height:1em; }
+  .msg.err{ color:#a4472f; }
+  .msg.ok{ color:#2f6b5a; word-break:break-all; }
+  [hidden]{ display:none !important; }
+</style>
+
+<div class="wrap">
+  <a class="back" href="/library">&larr; Library</a>
+  <h1 id="title">People</h1>
+
+  <div class="panel">
+    <table id="members-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="panel" id="invite-panel" hidden>
+    <strong style="font-size:.92rem">Invite someone</strong>
+    <div style="display:flex; gap:.5rem; margin-top:.6rem; flex-wrap:wrap">
+      <input id="inv-email" type="email" placeholder="email" style="flex:1">
+      <select id="inv-role">
+        <option value="reviewer">reviewer</option>
+        <option value="editor">editor</option>
+        <option value="author">author</option>
+        <option value="owner">owner</option>
+      </select>
+      <button style="border-color:#2f6b5a; color:#2f6b5a" id="inv-btn">Invite</button>
+    </div>
+    <p class="msg" id="inv-msg"></p>
+  </div>
+</div>
+
+<script>
+  var bookId = window.__MBOOK_ID__;
+  var myRole = window.__MBOOK_ROLE__;
+
+  function get(url) { return fetch(url, { credentials: 'same-origin' }).then(function (r) { return r.json(); }); }
+  function send(method, url, body) {
+    return fetch(url, { method: method, credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })
+      .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); });
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  var ROLES = ['reviewer', 'editor', 'author', 'owner'];
+
+  function load() {
+    get('/api/books/' + bookId).then(function (r) {
+      document.getElementById('title').textContent = 'People · ' + (r.book.title || r.book.slug);
+    });
+    get('/api/books/' + bookId + '/members').then(function (r) {
+      var isOwner = myRole === 'owner';
+      if (isOwner) document.getElementById('invite-panel').hidden = false;
+      document.querySelector('#members-table tbody').innerHTML = r.members.map(function (m) {
+        var roleCell = isOwner
+          ? '<select data-user="' + m.id + '">' + ROLES.map(function (ro) {
+              return '<option value="' + ro + '"' + (ro === m.role ? ' selected' : '') + '>' + ro + '</option>';
+            }).join('') + '</select>'
+          : esc(m.role);
+        var removeCell = isOwner ? '<button data-remove="' + m.id + '">Remove</button>' : '';
+        return '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.email) + '</td><td>' + roleCell + '</td><td>' + removeCell + '</td></tr>';
+      }).join('');
+
+      document.querySelectorAll('select[data-user]').forEach(function (sel) {
+        sel.onchange = function () {
+          send('PATCH', '/api/books/' + bookId + '/members/' + sel.dataset.user, { role: sel.value });
+        };
+      });
+      document.querySelectorAll('button[data-remove]').forEach(function (btn) {
+        btn.onclick = function () {
+          if (!confirm('Remove this person from the book?')) return;
+          send('DELETE', '/api/books/' + bookId + '/members/' + btn.dataset.remove).then(load);
+        };
+      });
+    });
+  }
+  load();
+
+  document.getElementById('inv-btn').onclick = function () {
+    var msg = document.getElementById('inv-msg');
+    msg.className = 'msg'; msg.textContent = '';
+    send('POST', '/api/books/' + bookId + '/invites', {
+      email: document.getElementById('inv-email').value.trim(),
+      role: document.getElementById('inv-role').value,
+    }).then(function (r) {
+      if (!r.ok) { msg.className = 'msg err'; msg.textContent = 'Could not create the invite.'; return; }
+      msg.className = 'msg ok';
+      msg.textContent = 'Send this token (they open /login, "one-time link", and paste it): ' + r.data.token;
+    });
+  };
+</script>

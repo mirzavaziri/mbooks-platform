@@ -1,0 +1,85 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-books — sign in</title>
+<style>
+  :root{ color-scheme: light dark; }
+  body{ font-family: system-ui, sans-serif; background:#f4f5f2; color:#1f2a44; display:flex; min-height:100vh;
+        align-items:center; justify-content:center; margin:0; padding:1.5rem; }
+  @media (prefers-color-scheme: dark){ body{ background:#10141b; color:#e3e6ec; } .card{ background:#161b24 !important; } input{ background:#0d1117; color:#e3e6ec; border-color:#2b3341 !important; } }
+  .card{ background:#fdfdfb; border-radius:12px; padding:2rem; width:100%; max-width:22rem; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+  h1{ font-size:1.25rem; margin:0 0 1.25rem; }
+  label{ display:block; font-size:.85rem; margin:.9rem 0 .3rem; }
+  input{ width:100%; padding:.55rem .65rem; border:1px solid #d9ddd6; border-radius:8px; font-size:1rem; }
+  button{ width:100%; margin-top:1.25rem; padding:.6rem; border:0; border-radius:8px; background:#2f6b5a; color:#fff; font-size:1rem; cursor:pointer; }
+  button:disabled{ opacity:.6; cursor:default; }
+  .msg{ font-size:.85rem; margin-top:.9rem; min-height:1.1em; }
+  .msg.err{ color:#a4472f; }
+  .msg.ok{ color:#2f6b5a; }
+  .toggle{ font-size:.82rem; margin-top:1rem; text-align:center; }
+  .toggle a{ color:#2f6b5a; cursor:pointer; text-decoration:underline; }
+  [hidden]{ display:none !important; }
+</style>
+
+<div class="card">
+  <div id="login-view">
+    <h1>M-books</h1>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button id="login-btn">Sign in</button>
+    <p class="msg" id="login-msg"></p>
+    <p class="toggle"><a id="show-link-view">Have a one-time link instead?</a></p>
+  </div>
+
+  <div id="link-view" hidden>
+    <h1>Set your password</h1>
+    <p style="font-size:.85rem;color:#4f5a73">Paste the one-time link token an admin sent you.</p>
+    <label for="link-token">Token</label>
+    <input id="link-token" type="text">
+    <label for="link-name">Your name (first time only)</label>
+    <input id="link-name" type="text">
+    <label for="link-password">New password</label>
+    <input id="link-password" type="password" autocomplete="new-password">
+    <button id="link-btn">Set password &amp; sign in</button>
+    <p class="msg" id="link-msg"></p>
+    <p class="toggle"><a id="show-login-view">Back to sign in</a></p>
+  </div>
+</div>
+
+<script>
+  var loginView = document.getElementById('login-view');
+  var linkView = document.getElementById('link-view');
+  document.getElementById('show-link-view').onclick = function () { loginView.hidden = true; linkView.hidden = false; };
+  document.getElementById('show-login-view').onclick = function () { linkView.hidden = true; loginView.hidden = false; };
+
+  function post(url, body) {
+    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); });
+  }
+
+  document.getElementById('login-btn').onclick = function () {
+    var msg = document.getElementById('login-msg');
+    msg.className = 'msg'; msg.textContent = '';
+    post('/api/auth/login', { email: document.getElementById('email').value, password: document.getElementById('password').value })
+      .then(function (r) {
+        if (r.ok) { location.href = '/library'; return; }
+        msg.className = 'msg err'; msg.textContent = 'Wrong email or password.';
+      });
+  };
+
+  document.getElementById('link-btn').onclick = function () {
+    var msg = document.getElementById('link-msg');
+    msg.className = 'msg'; msg.textContent = '';
+    post('/api/auth/consume-link', {
+      token: document.getElementById('link-token').value.trim(),
+      name: document.getElementById('link-name').value.trim(),
+      password: document.getElementById('link-password').value,
+    }).then(function (r) {
+      if (r.ok) { location.href = '/library'; return; }
+      msg.className = 'msg err';
+      msg.textContent = r.data.error === 'password_too_short' ? 'Password must be at least 8 characters.' : 'That link is invalid or expired.';
+    });
+  };
+</script>

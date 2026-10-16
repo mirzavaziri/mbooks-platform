@@ -1,0 +1,1398 @@
+
+<title>استودیوی شمردنی‌ها را بشمار</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Alegreya+Sans+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Vazirmatn:wght@400;500;700&display=swap">
+<style>
+/* Layout: an editor's desk. Section list on the left, the section as it will read in the
+   book in the middle; any block opens in place into its template form. */
+:root{
+  --paper:#f4f5f2; --sheet:#fdfdfb; --ink:#1f2a44; --ink-2:#4f5a73; --ink-3:#7a8296; --rule:#d9ddd6; --rule-2:#e8eae5;
+  --moss:#2f6b5a; --moss-wash:#e5eee8; --slate:#3d4f7a; --slate-wash:#e7ebf4; --clay:#a4472f; --clay-wash:#f5e8e2;
+  --gold:#8a6a1f; --gold-wash:#f4eedd; --code-bg:#eceee9; --focus:#2f6b5a;
+  --f-body:"Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --f-ui:"Alegreya Sans", "Gill Sans", "Segoe UI", sans-serif;
+  --f-label:"Alegreya Sans SC", "Gill Sans", "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+:root[lang="fa"]{ --f-body:"Vazirmatn", Tahoma, sans-serif; --f-ui:"Vazirmatn", Tahoma, sans-serif; --f-label:"Vazirmatn", Tahoma, sans-serif; --f-mono:"JetBrains Mono", "Vazirmatn", monospace }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#10141b; --sheet:#161b24; --ink:#e3e6ec; --ink-2:#aab2c3; --ink-3:#7d869a; --rule:#2b3341; --rule-2:#222935;
+  --moss:#7fc2ab; --moss-wash:#1a2a26; --slate:#9db0e0; --slate-wash:#1b2232; --clay:#e39a82; --clay-wash:#2d1f1b;
+  --gold:#d9b765; --gold-wash:#2a2416; --code-bg:#1b212b; --focus:#7fc2ab; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#10141b; --sheet:#161b24; --ink:#e3e6ec; --ink-2:#aab2c3; --ink-3:#7d869a; --rule:#2b3341; --rule-2:#222935;
+  --moss:#7fc2ab; --moss-wash:#1a2a26; --slate:#9db0e0; --slate-wash:#1b2232; --clay:#e39a82; --clay-wash:#2d1f1b;
+  --gold:#d9b765; --gold-wash:#2a2416; --code-bg:#1b212b; --focus:#7fc2ab; color-scheme:dark }
+
+[hidden]{ display:none !important }
+html,body{ background:var(--paper); color:var(--ink) }
+body{ font-family:var(--f-ui); font-size:15px; line-height:1.45 }
+*{ box-sizing:border-box }
+button,input,select,textarea{ font:inherit; color:inherit }
+:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; border-radius:3px }
+a{ color:var(--clay) }
+
+.app{ display:grid; grid-template-columns:17.5rem minmax(0,1fr); min-height:100vh }
+@media (max-width:900px){ .app{ grid-template-columns:minmax(0,1fr) } .side{ position:static; height:auto; border-right:0; border-bottom:1px solid var(--rule) } }
+
+/* sidebar */
+.side{ position:sticky; top:env(safe-area-inset-top,0px); height:100vh; overflow:auto; border-right:1px solid var(--rule); background:var(--sheet); padding:1.1rem 1rem 2rem; display:flex; flex-direction:column; gap:1rem }
+.brand .kicker{ font-family:var(--f-label); color:var(--moss); letter-spacing:.07em; font-size:.85rem }
+.brand h1{ font-family:var(--f-body); font-size:1.15rem; line-height:1.25; margin:.15rem 0 0; font-weight:600; text-wrap:balance }
+.brand .sub{ color:var(--ink-3); font-size:.85rem; font-family:var(--f-body); font-style:italic }
+.who{ display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:var(--ink-2) }
+.who img{ width:22px; height:22px; border-radius:50% }
+.toc{ display:flex; flex-direction:column; gap:.9rem }
+.toc h2{ font-family:var(--f-label); font-size:.82rem; letter-spacing:.08em; color:var(--ink-3); margin:0 0 .25rem; font-weight:700 }
+.toc ul{ list-style:none; margin:0; padding:0; display:grid; gap:1px }
+.toc button.sec{ width:100%; display:grid; grid-template-columns:2.6rem minmax(0,1fr) auto; gap:.35rem; align-items:center; text-align:left; border:0; background:none; padding:.35rem .45rem; border-radius:4px; cursor:pointer }
+.toc button.sec:hover{ background:var(--rule-2) }
+.toc button.sec[aria-current="true"]{ background:var(--moss-wash) }
+.toc .num{ font-family:var(--f-ui); font-size:.75rem; color:var(--ink-3); font-variant-numeric:tabular-nums }
+.toc .ttl{ font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.dot{ width:.55rem; height:.55rem; border-radius:50%; border:1.5px solid var(--ink-3) }
+.dot.s-drafting{ border-color:var(--gold); background:var(--gold) }
+.dot.s-review{ border-color:var(--slate); background:var(--slate) }
+.dot.s-done{ border-color:var(--moss); background:var(--moss) }
+.legend{ display:flex; flex-wrap:wrap; gap:.3rem .8rem; font-size:.78rem; color:var(--ink-3) }
+.legend span{ display:inline-flex; align-items:center; gap:.3rem }
+.addsec{ display:grid; gap:.4rem; border-top:1px dashed var(--rule); padding-top:.8rem }
+.addsec .row{ display:grid; grid-template-columns:4.2rem minmax(0,1fr); gap:.4rem }
+
+/* main */
+.main{ padding:1.4rem clamp(16px,3vw,2.5rem) 5rem; min-width:0 }
+.bar{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:.8rem 1.2rem; border-bottom:1px solid var(--rule); padding-bottom:1rem; margin-bottom:1.2rem }
+.bar .titles{ flex:1 1 22rem; min-width:0; display:grid; gap:.25rem }
+.bar .chap{ font-family:var(--f-label); color:var(--moss); letter-spacing:.06em; font-size:.88rem }
+.bar h2{ margin:0; font-family:var(--f-body); font-size:clamp(1.5rem,3vw,2.1rem); font-weight:600; line-height:1.1; text-wrap:balance }
+.bar .tools{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center }
+.notes{ margin:0 0 1.4rem; display:grid; gap:.3rem }
+.notes textarea{ min-height:2.6rem }
+label.small{ font-family:var(--f-label); letter-spacing:.06em; font-size:.8rem; color:var(--ink-3) }
+
+.btn{ border:1px solid var(--moss); background:var(--moss); color:var(--sheet); border-radius:4px; padding:.32rem .8rem; cursor:pointer; font-family:var(--f-label); letter-spacing:.04em; font-size:.88rem; line-height:1.3 }
+.btn.ghost{ background:transparent; color:var(--moss) }
+.btn.quiet{ background:transparent; border-color:var(--rule); color:var(--ink-2) }
+.btn.danger{ background:var(--clay); border-color:var(--clay) }
+.btn:disabled{ opacity:.5; cursor:not-allowed }
+.btn:hover:not(:disabled){ filter:brightness(1.07) }
+input[type=text],input[type=number],select,textarea{ width:100%; border:1px solid var(--rule); background:var(--paper); border-radius:4px; padding:.38rem .5rem; min-width:0 }
+textarea{ resize:vertical; line-height:1.5 }
+textarea.mono, input.mono{ font-family:var(--f-mono); font-size:.86rem }
+select{ width:auto }
+
+/* the page column */
+.page{ max-width:46rem; background:var(--sheet); border:1px solid var(--rule); border-radius:4px; padding:1.4rem clamp(14px,3vw,2.2rem) 1.6rem; font-family:var(--f-body); font-size:1.05rem; line-height:1.6 }
+.empty{ text-align:left; color:var(--ink-2); font-family:var(--f-ui); padding:.4rem 0 .8rem }
+.empty strong{ color:var(--ink); font-family:var(--f-body); font-size:1.1rem; display:block; margin-bottom:.2rem }
+
+.blk{ position:relative; border-radius:4px; margin:.25rem -.6rem; padding:.15rem .6rem }
+.blk:hover, .blk:focus-within{ background:color-mix(in srgb, var(--rule-2) 55%, transparent) }
+.blk .tb{ display:flex; gap:.25rem; justify-content:flex-end; align-items:center; flex-wrap:wrap; font-family:var(--f-ui); opacity:0; transition:opacity .12s; min-height:1.6rem }
+.blk:hover .tb, .blk:focus-within .tb{ opacity:1 }
+@media (hover:none){ .blk .tb{ opacity:1 } }
+.tb .type{ margin-right:auto; font-family:var(--f-label); font-size:.75rem; letter-spacing:.07em; color:var(--ink-3) }
+.tb .meta{ font-size:.75rem; color:var(--ink-3) }
+.tb button{ border:1px solid transparent; background:none; border-radius:3px; padding:.1rem .4rem; font-size:.8rem; cursor:pointer; color:var(--ink-2); font-family:var(--f-ui) }
+.tb button:hover{ border-color:var(--rule); background:var(--sheet) }
+.tb .confirm{ display:inline-flex; gap:.25rem; align-items:center; font-size:.8rem; color:var(--clay) }
+
+.ins{ display:flex; align-items:center; gap:.5rem; margin:.15rem 0; opacity:.0; transition:opacity .12s }
+.ins:hover, .ins:focus-within, .ins.open, .page:hover .ins.last{ opacity:1 }
+@media (hover:none){ .ins{ opacity:1 } }
+.ins::before, .ins::after{ content:""; flex:1; border-top:1px dashed var(--rule) }
+.ins > button{ font-family:var(--f-label); font-size:.78rem; letter-spacing:.06em; color:var(--moss); background:var(--sheet); border:1px solid var(--rule); border-radius:99px; padding:.05rem .7rem; cursor:pointer }
+.palette{ font-family:var(--f-ui); border:1px solid var(--rule); background:var(--paper); border-radius:6px; padding:.7rem .8rem; margin:.3rem 0 .8rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr)); gap:.7rem 1rem }
+.palette h4{ margin:0 0 .3rem; font-family:var(--f-label); font-size:.78rem; letter-spacing:.07em; color:var(--ink-3); font-weight:700 }
+.palette .grp{ display:grid; gap:.2rem; align-content:start }
+.palette button{ text-align:left; border:1px solid transparent; background:none; padding:.2rem .4rem; border-radius:3px; cursor:pointer; font-size:.9rem; display:flex; gap:.45rem; align-items:center }
+.palette button:hover{ border-color:var(--rule); background:var(--sheet) }
+.palette .sw{ width:.7rem; height:.7rem; border-radius:2px; flex:none }
+
+/* rendered blocks, matching the book */
+.r-p > :first-child{ margin-top:0 } .r-p > :last-child{ margin-bottom:0 }
+.r-h{ font-size:1.18rem; font-weight:600; margin:.6rem 0 .2rem; font-family:var(--f-head, inherit) }
+.env{ padding:.75rem 1rem; border-radius:3px; position:relative; margin:.3rem 0 }
+.env .lab{ font-family:var(--f-label); font-weight:700; letter-spacing:.04em; margin-right:.35rem }
+.env > div > p:first-child{ display:inline } .env > div > :last-child{ margin-bottom:0 }
+.env.theorem,.env.lemma,.env.proposition,.env.corollary{ background:var(--sheet); border:1px solid var(--rule); border-left:4px solid var(--ink) }
+.env.theorem .body,.env.lemma .body,.env.proposition .body,.env.corollary .body{ font-style:italic }
+.env.definition{ background:var(--moss-wash) } .env.definition .lab{ color:var(--moss) }
+.env.example{ background:var(--slate-wash) } .env.example .lab{ color:var(--slate) }
+.env.remark{ background:var(--clay-wash) } .env.remark .lab{ color:var(--clay) }
+.env .suit{ position:absolute; right:.7rem; bottom:.35rem }
+.env.definition .suit{ color:var(--moss) } .env.example .suit{ color:var(--slate) } .env.remark .suit{ color:var(--clay) }
+.r-proof .lab{ font-style:italic; font-weight:600 }
+.r-proof .qed{ float:right; font-size:.8rem; margin-top:.4rem }
+.r-margin{ font-family:var(--f-ui); font-size:.92rem; color:var(--ink-2); border-left:3px solid var(--moss); background:var(--moss-wash); padding:.5rem .8rem; margin:.3rem 0; border-radius:0 3px 3px 0 }
+.r-margin .k{ font-family:var(--f-label); letter-spacing:.06em; font-size:.75rem; color:var(--moss); display:block }
+.r-quote{ font-family:var(--f-body); border-left:3px solid var(--gold); background:var(--gold-wash); padding:.6rem .9rem; margin:.3rem 0; border-radius:0 3px 3px 0 }
+.r-quote .k{ font-family:var(--f-label); letter-spacing:.06em; font-size:.75rem; color:var(--gold); display:block; font-style:normal }
+.r-quote blockquote{ margin:0; font-style:italic }
+.r-quote .qimg{ float:inline-end; width:5.2rem; aspect-ratio:5/6; object-fit:cover; margin:.1rem .7rem .3rem 0; border-radius:3px; filter:grayscale(1) }
+[dir=rtl] .r-quote .qimg{ margin:.1rem 0 .3rem .7rem }
+.r-quote::after{ content:''; display:block; clear:both }
+.r-quote .by{ font-size:.9rem; color:var(--ink-2); margin-top:.25rem }
+.r-box{ border:1px solid var(--rule); border-radius:3px; padding:.75rem 1rem; margin:.3rem 0 }
+.r-box .k{ font-family:var(--f-label); font-weight:700; letter-spacing:.05em; display:block; margin-bottom:.25rem }
+.r-box.thread{ border-left:4px solid var(--moss) } .r-box.thread .k{ color:var(--moss) }
+.r-box.proofs{ border-left:4px solid var(--slate) } .r-box.proofs .k{ color:var(--slate) }
+.r-box.authors{ border-left:4px dashed var(--clay) } .r-box.authors .k{ color:var(--clay) }
+.r-box.lab{ border-style:dashed; background:var(--paper) } .r-box.lab .k{ color:var(--clay) }
+.pill{ display:inline-block; font-family:var(--f-label); font-size:.72rem; letter-spacing:.06em; border:1px solid currentColor; border-radius:99px; padding:0 .45rem; margin-left:.4rem; vertical-align:2px }
+.r-code{ border:1px solid var(--rule); border-radius:3px; background:var(--code-bg); margin:.3rem 0; overflow:hidden }
+.r-code .k{ font-family:var(--f-label); letter-spacing:.05em; font-size:.78rem; color:var(--ink-2); padding:.3rem .7rem; border-bottom:1px solid var(--rule); display:flex; gap:.5rem }
+.r-code pre{ margin:0; padding:.6rem .8rem; max-height:15rem; overflow:auto; font-family:var(--f-mono); font-size:.8rem; line-height:1.5 }
+.r-person{ font-family:var(--f-ui); font-size:.92rem; color:var(--ink-2); border-left:3px solid var(--gold); background:var(--gold-wash); padding:.55rem .8rem; margin:.3rem 0; border-radius:0 3px 3px 0 }
+.r-person .k{ font-family:var(--f-label); letter-spacing:.06em; font-size:.75rem; color:var(--gold); display:block; margin-bottom:.3rem }
+.r-person .pp{ display:grid; grid-template-columns:4.2rem minmax(0,1fr); gap:.7rem; align-items:start }
+.r-person img, .r-person .noimg{ width:4.2rem; height:5.2rem; object-fit:cover; border-radius:3px; background:var(--rule-2) }
+.r-person .noimg{ display:grid; place-items:center; font-family:var(--f-body); font-size:1.6rem; color:var(--ink-3) }
+.r-person strong{ color:var(--ink); font-family:var(--f-body) } .r-person .yrs{ color:var(--ink-3) }
+.r-person p{ margin:.2rem 0 }
+.r-person blockquote{ margin:.5rem 0 0; font-family:var(--f-body); font-style:italic; color:var(--ink) }
+.r-person .by{ font-style:normal; font-size:.85rem; color:var(--ink-2) }
+.r-person .cr{ font-size:.75rem; color:var(--ink-3); margin-top:.3rem }
+.r-fig{ margin:.4rem 0; text-align:center } .r-fig img{ max-width:100%; height:auto; background:#fff; border-radius:3px }
+.r-fig figcaption{ font-size:.92rem; color:var(--ink-2); margin-top:.3rem }
+.r-ex{ border-top:1px dashed var(--rule); padding-top:.5rem; margin:.3rem 0 }
+.r-ex .head{ display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; margin-bottom:.2rem }
+.r-ex .head strong{ font-family:var(--f-label); letter-spacing:.04em }
+.tag{ font-family:var(--f-label); font-size:.72rem; letter-spacing:.06em; border:1px solid currentColor; border-radius:99px; padding:0 .45rem; color:var(--ink-2) }
+.tag.t-omath,.tag.t-oinf{ color:var(--slate) } .tag.t-algorithm,.tag.t-code,.tag.t-cs{ color:var(--clay) } .tag.t-research{ color:var(--moss) }
+.r-ex details{ margin:.3rem 0; border-left:2px solid var(--rule); padding-left:.7rem; font-size:.97rem }
+.r-ex summary{ cursor:pointer; font-family:var(--f-label); letter-spacing:.05em; color:var(--moss); font-size:.88rem }
+.r-ex .ans{ font-size:.88rem; color:var(--ink-3); font-family:var(--f-ui) }
+.voice{ display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; font-family:var(--f-ui); font-size:.85rem; color:var(--ink-2); margin:.35rem 0 .1rem; padding:.35rem .5rem; border:1px solid var(--rule); border-radius:99px; background:var(--paper) }
+.voice .k{ font-family:var(--f-label); color:var(--moss); letter-spacing:.06em }
+.voice audio{ height:2rem; max-width:100%; flex:1 1 14rem }
+.gls{ text-decoration:underline dotted var(--moss); text-underline-offset:.2em }
+.ref{ font-family:var(--f-ui); font-size:.9em; color:var(--moss); border-bottom:1px dotted var(--moss) }
+.ref.miss{ color:var(--clay); border-color:var(--clay) }
+mjx-container[display="true"]{ overflow-x:auto; overflow-y:hidden; max-width:100% }
+.page table{ border-collapse:collapse; margin:.5rem auto; display:block; overflow-x:auto; max-width:100%; width:max-content; font-variant-numeric:tabular-nums; font-size:.95rem }
+.page th,.page td{ border-bottom:1px solid var(--rule); padding:.2rem .7rem }
+
+/* book settings and formatting */
+.brand .bset{ margin-top:.5rem }
+.cover-prev{ display:flex; gap:.8rem; align-items:flex-start; flex-wrap:wrap }
+.cover-prev img{ max-width:9rem; max-height:12rem; border:1px solid var(--rule); border-radius:3px; background:#fff }
+.cover-prev .ph{ width:9rem; height:12rem; display:grid; place-items:center; border:1px dashed var(--rule); border-radius:3px; color:var(--ink-3); font-size:.85rem; text-align:center; padding:.5rem }
+.set-sec{ border-top:1px solid var(--rule); padding-top:.9rem; margin-top:.9rem; display:grid; gap:.6rem }
+.set-sec h3{ margin:0; font-family:var(--f-label); letter-spacing:.06em; font-size:.9rem; color:var(--moss) }
+.chap-row{ display:grid; gap:.3rem; border:1px solid var(--rule-2); border-radius:4px; padding:.5rem .6rem; background:var(--paper) }
+.fmt{ display:flex; flex-wrap:wrap; gap:.4rem .9rem; align-items:center }
+.fmt .seg{ display:inline-flex; border:1px solid var(--rule); border-radius:4px; overflow:hidden }
+.fmt .seg label{ display:inline-flex; align-items:center; gap:.2rem; padding:.15rem .5rem; cursor:pointer; font-size:.85rem; border-right:1px solid var(--rule); background:var(--sheet) }
+.fmt .seg label:last-child{ border-right:0 }
+.fmt .seg input{ position:absolute; opacity:0; pointer-events:none }
+.fmt .seg input:checked + span{ color:var(--moss); font-weight:700 }
+.fmt .seg label:focus-within{ outline:2px solid var(--focus); outline-offset:-2px }
+.al-left{ text-align:left } .al-center{ text-align:center } .al-right{ text-align:right } .al-justify{ text-align:justify }
+.fw-bold{ font-weight:700 } .fs-italic{ font-style:italic }
+.sec-edit{ display:grid; grid-template-columns:5rem minmax(0,1fr); gap:.4rem; margin-top:.4rem; max-width:40rem }
+.sec-edit .full{ grid-column:1/-1 }
+
+/* editor form */
+.ed{ font-family:var(--f-ui); border:1.5px solid var(--moss); border-radius:6px; background:var(--paper); padding:.8rem .9rem; margin:.4rem -.2rem; display:grid; gap:.65rem }
+.ed .edh{ display:flex; align-items:center; gap:.6rem; flex-wrap:wrap }
+.ed .edh strong{ font-family:var(--f-label); letter-spacing:.06em; color:var(--moss) }
+.ed .hint{ font-size:.8rem; color:var(--ink-3) }
+.ed .f{ display:grid; gap:.2rem }
+.ed .grid2{ display:grid; grid-template-columns:repeat(auto-fit,minmax(12rem,1fr)); gap:.6rem }
+.ed .tags{ display:flex; flex-wrap:wrap; gap:.35rem }
+.ed .tags label{ display:inline-flex; gap:.25rem; align-items:center; border:1px solid var(--rule); border-radius:99px; padding:.05rem .55rem; font-size:.85rem; cursor:pointer; background:var(--sheet) }
+.ed .tags input:checked + span{ color:var(--moss); font-weight:700 }
+.ed .prev{ border-top:1px dashed var(--rule); padding-top:.5rem; font-family:var(--f-body) }
+.ed .prev .k{ font-family:var(--f-label); font-size:.75rem; letter-spacing:.07em; color:var(--ink-3) }
+.ed .actions{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center }
+.warn{ border:1px solid var(--clay); background:var(--clay-wash); color:var(--ink); border-radius:4px; padding:.5rem .7rem; font-size:.9rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center }
+.msg{ font-size:.85rem; color:var(--ink-2) } .msg.err{ color:var(--clay) }
+
+.toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(1rem + env(safe-area-inset-bottom,0px)); background:var(--ink); color:var(--sheet); padding:.45rem .9rem; border-radius:4px; font-size:.9rem; z-index:20; max-width:calc(100vw - 32px) }
+.readonly-note{ font-size:.85rem; color:var(--clay) }
+.srcbox{ margin-top:1rem; display:grid; gap:.4rem }
+.srcbox textarea{ min-height:16rem }
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important } }
+
+.preview{ position:fixed; inset:0; z-index:40; background:var(--paper); display:flex; flex-direction:column; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px) }
+.pv-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:.5rem 1rem; padding:.5rem 1rem; border-bottom:1px solid var(--rule); background:var(--sheet) }
+.pv-bar .btn{ margin-inline-start:auto }
+.preview iframe{ flex:1; width:100%; border:0; background:var(--paper) }
+.mdtools{ display:flex; flex-wrap:wrap; gap:.25rem; align-items:center }
+.mdtools button{ border:1px solid var(--rule); background:var(--sheet); border-radius:3px; padding:0 .5rem; min-width:2rem; cursor:pointer; font-size:.85rem; line-height:1.7 }
+.mdtools select{ padding:.05rem .3rem; font-size:.82rem }
+#page{ --bk-head: inherit; --bk-label: inherit; --bk-margin: inherit }
+#page .r-h, #s-title{ font-family:var(--bk-head) }
+#page .env .lab, #page .r-ex .head strong, #page .r-box .k, #page .r-proof .lab{ font-family:var(--bk-label) }
+#page .r-margin, #page .r-quote, #page .r-person{ font-family:var(--bk-margin) }
+/* ---------- right-to-left (Persian books) ---------- */
+[dir="rtl"] .side{ border-right:0; border-left:1px solid var(--rule) }
+[dir="rtl"] .toc button.sec{ text-align:right }
+[dir="rtl"] .tb .type{ margin-right:0; margin-left:auto }
+[dir="rtl"] .env .lab{ margin-right:0; margin-left:.35rem }
+[dir="rtl"] .env.theorem,[dir="rtl"] .env.lemma,[dir="rtl"] .env.proposition,[dir="rtl"] .env.corollary,[dir="rtl"] .env.principle{ border-left:1px solid var(--rule); border-right:4px solid var(--ink) }
+[dir="rtl"] .env.principle{ border-right-color:var(--clay) }
+:root[lang="fa"] .page em, :root[lang="fa"] .ed .prev em{ font-style:normal; font-weight:600 }
+:root[lang="fa"] .env .body{ font-style:normal !important }
+.voice.todo{ border-style:dashed; color:var(--ink-3) }
+[dir="rtl"] .env .suit{ right:auto; left:.7rem }
+[dir="rtl"] .r-proof .qed{ float:left }
+[dir="rtl"] .r-margin,[dir="rtl"] .r-quote,[dir="rtl"] .r-person{ border-left:0; border-right:3px solid var(--moss); border-radius:3px 0 0 3px }
+[dir="rtl"] .r-quote,[dir="rtl"] .r-person{ border-right-color:var(--gold) }
+[dir="rtl"] .r-margin.aside{ border-right-color:var(--slate) }
+[dir="rtl"] .r-box.thread{ border-left-width:1px; border-right:4px solid var(--moss) }
+[dir="rtl"] .r-box.proofs{ border-left-width:1px; border-right:4px solid var(--slate) }
+[dir="rtl"] .r-box.authors{ border-left-width:1px; border-right:4px dashed var(--clay) }
+[dir="rtl"] .r-ex details{ border-left:0; border-right:2px solid var(--rule); padding-left:0; padding-right:.7rem }
+[dir="rtl"] .pill{ margin-left:0; margin-right:.4rem }
+[dir="rtl"] .fmt .seg label{ border-right:0; border-left:1px solid var(--rule) }
+[dir="rtl"] .fmt .seg label:last-child{ border-left:0 }
+[dir="rtl"] .empty{ text-align:right }
+[dir="rtl"] .ed .f textarea, [dir="rtl"] .ed .f input[type=text]{ text-align:start }
+pre, code, textarea.code, input.mono, .r-code, .ltr{ direction:ltr; unicode-bidi:isolate }
+.r-code pre{ text-align:left }
+mjx-container{ direction:ltr; unicode-bidi:isolate }
+.env table, .exsol table{ direction:ltr }
+.env.principle{ background:var(--sheet); border:1px solid var(--rule); border-left:4px solid var(--clay) } .env.principle .lab{ color:var(--clay) }
+.env.principle .suit{ color:var(--ink); font-size:.8rem }
+.exsol{ margin-top:.6rem; padding-top:.5rem; border-top:1px dashed var(--rule) }
+.r-margin.aside{ border-left-color:var(--slate); background:var(--slate-wash) } .r-margin.aside .k{ color:var(--slate) }
+.r-margin details{ margin:.3rem 0 0 } .r-margin summary{ cursor:pointer; color:var(--clay) }
+.r-person .lat{ font-style:italic; color:var(--ink-3); font-family:"Source Serif 4", Georgia, serif }
+.r-fig .svgwrap svg{ width:100%; height:auto; max-height:22rem }
+.tag.t-new{ color:var(--sheet); background:var(--moss); border-color:var(--moss) }
+.langpick{ display:flex; gap:.4rem; align-items:center }
+</style>
+
+<div class="app">
+  <aside class="side" aria-label="Book sections">
+    <div class="brand">
+      <div class="kicker">M-book Studio</div>
+      <h1 id="brand-title">Counting in Graphs</h1>
+      <div class="sub" id="brand-sub">A Short Path to Enumerative Graph Theory</div>
+      <div class="bset"><button class="btn quiet" type="button" id="b-settings">Book settings</button></div>
+    </div>
+    <div class="who" id="who"></div>
+    <nav class="toc" id="toc"><p class="msg">Loading sections…</p></nav>
+    <div class="legend" aria-label="Section status">
+      <span><i class="dot"></i>Not started</span><span><i class="dot s-drafting"></i>Drafting</span>
+      <span><i class="dot s-review"></i>In review</span><span><i class="dot s-done"></i>Done</span>
+    </div>
+    <form class="addsec" id="addsec" hidden>
+      <label class="small" for="ns-title">Add a section</label>
+      <div class="row">
+        <input type="text" id="ns-num" placeholder="2.1" aria-label="Section number">
+        <input type="text" id="ns-title" placeholder="Section title">
+      </div>
+      <input type="text" id="ns-chap" placeholder="Chapter label, e.g. Chapter 2 · Elementary Explicit Answers" aria-label="Chapter label">
+      <button class="btn ghost" type="submit">Add section</button>
+    </form>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="bar">
+      <div class="titles">
+        <div class="chap" id="s-chap"></div>
+        <h2 id="s-title">Choose a section</h2>
+      </div>
+      <div class="tools">
+        <label class="small" for="s-status">Status</label>
+        <select id="s-status" disabled>
+          <option value="">Not started</option><option value="drafting">Drafting</option>
+          <option value="review">In review</option><option value="done">Done</option>
+        </select>
+        <button class="btn quiet" type="button" id="b-secedit" disabled>Edit section</button>
+        <button class="btn quiet" type="button" id="b-source" disabled>Book source</button>
+        <button class="btn" type="button" id="b-preview">Preview the book</button>
+      </div>
+    </div>
+    <form class="sec-edit" id="secedit" hidden>
+      <label class="small" for="se-num">Number</label><label class="small" for="se-title">Section title</label>
+      <input type="text" id="se-num"><input type="text" id="se-title">
+      <label class="small full" for="se-chap">Chapter</label>
+      <input type="text" id="se-chap" class="full" list="chap-list"><datalist id="chap-list"></datalist>
+      <div class="full" style="display:flex;gap:.5rem;align-items:center"><button class="btn" type="submit">Save section</button><button class="btn quiet" type="button" id="se-cancel">Cancel</button><span class="hint msg">To rename a chapter for all its sections, use Book settings.</span></div>
+    </form>
+    <div class="notes" id="notes-wrap" hidden>
+      <label class="small" for="s-notes">Notes between the authors</label>
+      <textarea id="s-notes" rows="2" placeholder="What still needs doing here, questions for each other…"></textarea>
+    </div>
+    <p class="readonly-note" id="ro" hidden>You can read this studio but not change it. Ask the owner for Contributor access.</p>
+    <article class="page" id="page" aria-live="polite">
+      <div class="empty"><strong>Pick a section on the left.</strong>Its blocks appear here as they will read in the book.</div>
+    </article>
+    <div class="srcbox" id="srcbox" hidden>
+      <label class="small" for="src">Quarto source of this section (what the book build reads)</label>
+      <textarea id="src" class="mono" readonly></textarea>
+      <div class="actions" style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn" type="button" id="b-copy">Copy</button>
+        <button class="btn ghost" type="button" id="b-dl" hidden>Save as .md</button>
+        <span class="msg" id="srcmsg"></span>
+      </div>
+    </div>
+  </main>
+</div>
+<input type="file" id="voice-file" accept="audio/*,.m4a,.mp4,.webm,.mp3,.wav,.ogg,.oga,.opus,.aac,.flac,.amr,.3gp,video/mp4,video/webm" hidden>
+<div id="preview" class="preview" hidden role="dialog" aria-label="Preview the book"><div class="pv-bar"><strong>Preview of the reader edition</strong><span class="msg" id="pv-msg"></span><span class="hint">This is how readers will see the book. The published edition changes only when it is rebuilt.</span><button type="button" class="btn" id="pv-close">Close preview</button></div><iframe id="pv-frame" title="Preview of the book"></iframe></div>
+<input type="file" id="font-file" accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf" hidden>
+<input type="file" id="img-file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" hidden>
+
+<script>
+window.MathJax = { tex:{ inlineMath:[['$','$'],['\\(','\\)']], displayMath:[['$$','$$'],['\\[','\\]']] }, svg:{ fontCache:'global', matchFontHeight:false }, startup:{ typeset:false } };
+</script>
+<script src="/vendor/marked.min.js"></script>
+<script src="/vendor/purify.min.js"></script>
+<script src="/vendor/mathjax-tex-svg.js" async></script>
+<script>
+(function(){
+"use strict";
+var $ = function(s,r){ return (r||document).querySelector(s); };
+var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+/* ---------------- language ---------------- */
+var LANG = 'en';
+try{ LANG = localStorage.getItem('mbook-lang') || 'en'; }catch(e){}
+var FA_DIG='۰۱۲۳۴۵۶۷۸۹';
+function nd(x){ return (LANG==='fa' && book && book.digits!=='latin') ? String(x).replace(/[0-9]/g,function(d){return FA_DIG[+d];}) : String(x); }
+var VOC = {
+  en:{definition:'Definition',theorem:'Theorem',lemma:'Lemma',proposition:'Proposition',corollary:'Corollary',principle:'Principle',example:'Example',remark:'Remark',
+      proof:'Proof',of:' of ',exercise:'Exercise',hint:'Hint',solution:'Solution sketch',selfcheck:'Self-check',answer:'Your answer',thread:'Research thread',reading:'Reading',
+      proofs:'One number, many proofs',authors:'From the authors’ research',lab:'Interactive lab',figure:'Figure',voice:'Author’s voice',subheading:'Untitled subheading',
+      mhist:'Margin · history',mquote:'Margin · quotation',mperson:'Margin · mathematician',maside:'Margin · note',more:'Proof',why:'What is wrong?',portrait:'Portrait',lines:'lines',runnable:'runnable'},
+  fa:{definition:'تعریف',theorem:'قضیه',lemma:'لم',proposition:'گزاره',corollary:'نتیجه',principle:'اصل',example:'مثال',remark:'تبصره',
+      proof:'برهان',of:' ',exercise:'تمرین',hint:'راهنمایی',solution:'طرح حل',selfcheck:'بررسی پاسخ',answer:'پاسخ شما',thread:'رشتهٔ پژوهشی',reading:'برای مطالعه',
+      proofs:'یک عدد، چند برهان',authors:'از پژوهش‌های مؤلف',lab:'آزمایشگاه',figure:'شکل',voice:'صدای مؤلف',subheading:'زیرعنوان بی‌نام',
+      mhist:'حاشیه · نکتهٔ تاریخی',mquote:'حاشیه · نقل‌قول',mperson:'حاشیه · ریاضیدان',maside:'حاشیه · یادداشت',more:'اثبات',why:'اشکال کجاست؟',portrait:'تصویر',lines:'خط',runnable:'اجراشدنی'}
+};
+function V(k){ return (VOC[LANG]||VOC.en)[k] || VOC.en[k] || k; }
+var TAGFA = {pure:'محض',cs:'علوم کامپیوتر',algorithm:'الگوریتم',code:'کد',omath:'المپیاد ریاضی',oinf:'المپیاد کامپیوتر',research:'پروژهٔ پژوهشی','new':'تازه'};
+function tagName(t){ if(LANG==='fa') return TAGFA[t]||t; var n=TAGS.filter(function(x){return x[0]===t;})[0]; return n?n[1]:t; }
+/* UI strings: exact English text -> Persian. A MutationObserver translates the shell and every
+   panel the studio draws; book content is marked data-nl and left alone. */
+var FA = {"Portrait (optional)": "تصویر (اختیاری)", "Built-in portraits": "تصویرهای آماده", "Built-in portraits…": "تصویرهای آمادهٔ کتاب…", "Remove image": "حذف تصویر", "Upload the recording": "بارگذاری فایل صوتی", "Converting the recording to M4A…": "در حال تبدیل صدا به M4A…", "The recording is longer than 25 minutes.": "صدا بیش از ۲۵ دقیقه است.", "This browser could not convert the file. Use an .m4a recording (the voice recorder of most phones makes one).": "این مرورگر نتوانست فایل را تبدیل کند. صدا را با قالب ‎.m4a بدهید (ضبط صدای بیشتر گوشی‌ها همین قالب را می‌سازد).", "Add voice": "افزودن صدا", "Replace voice": "تعویض صدا", "2.1": "۱.۲", "Add a section": "افزودن بخش", "Add its first block: a paragraph, a definition, a historical note…": "اولین بلوک آن را اضافه کنید: یک بند، یک تعریف، یک نکتهٔ تاریخی…", "Add section": "افزودن بخش", "Add voice": "افزودن صدا", "Algorithm": "الگوریتم", "Answer prompt": "متن کنار خانهٔ پاسخ", "Block deleted.": "بلوک حذف شد.", "Bold": "پررنگ", "Book default": "پیش‌فرض کتاب", "Book sections": "بخش‌های کتاب", "Book settings": "تنظیمات کتاب", "Book settings saved.": "تنظیمات کتاب ذخیره شد.", "Book source": "منبع کتاب", "Cancel": "انصراف", "Caption": "زیرنویس", "Centre": "وسط", "Chapter": "فصل", "Chapter label": "نام فصل", "Chapter label, e.g. Chapter 2 · Elementary Explicit Answers": "نام فصل، مثلاً فصل ۲ · یا، و", "Choose a section": "یک بخش را انتخاب کنید", "Claude builds the widget from this description": "Claude آزمایشگاه را از روی همین توضیح می‌سازد", "Code": "کد", "Code window": "پنجرهٔ کد", "Computer Science": "علوم کامپیوتر", "Copied.": "کپی شد.", "Copy": "کپی", "Corollary": "نتیجه", "Cover uploaded. Save to keep it.": "تصویر جلد بارگذاری شد. برای نگه‌داشتن آن ذخیره کنید.", "Definition": "تعریف", "Delete": "حذف", "Description for screen readers": "توضیح برای صفحه‌خوان", "Done": "تمام‌شده", "Drafting": "در حال نوشتن", "Edit": "ویرایش", "Edit section": "ویرایش بخش", "Example": "مثال", "Exercise": "تمرین", "Exercises & research": "تمرین و پژوهش", "Figure": "شکل", "From the authors’ research": "از پژوهش‌های مؤلف", "Give the section a title.": "برای بخش عنوانی بنویسید.", "Give the status with a date, e.g. “open as of 2026”": "وضعیت را با تاریخ بنویسید، مثلاً «تا ۲۰۲۶ باز است»", "Heading (optional)": "عنوان (اختیاری)", "Hints": "راهنمایی‌ها", "Historical note": "نکتهٔ تاریخی", "Image": "تصویر", "Image attached": "تصویر پیوست شد", "In review": "در حال بازبینی", "Informatics Olympiad": "المپیاد کامپیوتر", "Interactive lab (spec)": "آزمایشگاه تعاملی (شرح)", "Italic": "مایل", "Its blocks appear here as they will read in the book.": "بلوک‌های آن همان‌طور که در کتاب خوانده می‌شوند اینجا می‌آیند.", "Justified": "دوطرفه", "Justify": "دوطرفه", "Kind": "نوع", "Lab name": "نام آزمایشگاه", "Label for references": "برچسب برای ارجاع", "Language": "زبان", "Left": "چپ", "Left to right (English)": "چپ به راست (انگلیسی)", "Lemma": "لم", "Loading sections…": "در حال بارگذاری بخش‌ها…", "Margin": "حاشیه", "Markdown; math between dollar signs; refer with @thm-label; glossary term: [trees]{.gls key=tree}": "مارک‌داون؛ ریاضی میان دو علامت دلار؛ ارجاع با ‎@thm-label؛ واژهٔ واژه‌نامه: [درخت]{.gls key=tree}", "Math Olympiad": "المپیاد ریاضی", "Mathematician": "ریاضیدان", "Media": "رسانه", "Move down": "پایین‌تر", "Move up": "بالاتر", "Name": "نام", "Name (optional)": "نام (اختیاری)", "Normal": "معمولی", "Not started": "شروع‌نشده", "Note": "یادداشت", "Notes between the authors": "یادداشت‌های مؤلفان", "Nothing has been written here yet.": "هنوز چیزی اینجا نوشته نشده است.", "Number": "شماره", "Numeric answer for self-check (optional)": "پاسخ عددی برای بررسی خودکار (اختیاری)", "Offer “Run” in the web edition": "دکمهٔ «اجرا» در نسخهٔ وب", "One hint per paragraph block; separate hints with a line ---": "هر راهنمایی در یک بند؛ راهنمایی‌ها را با خط --- جدا کنید", "One number, many proofs": "یک عدد، چند برهان", "One or two lines": "یکی دو سطر", "Other": "سایر", "PNG, JPEG, SVG or WebP": "PNG، JPEG، SVG یا WebP", "Paper": "مقاله", "Paragraph": "بند", "Pick a section on the left.": "یک بخش را از فهرست کنار صفحه انتخاب کنید.", "Placed in the margin beside the block above it": "در حاشیه، کنار بلوک بالایی می‌آید", "Portrait": "تصویر", "Portrait source and licence": "منبع و مجوز تصویر", "Press Ctrl+C to copy.": "برای کپی Ctrl+C را بزنید.", "Problem, status and a first step": "مسأله، وضعیت و یک گام اول", "Proof": "برهان", "Proof of (optional label)": "برهانِ (برچسب، اختیاری)", "Proposition": "گزاره", "Pure": "محض", "Quarto source of this section (what the book build reads)": "منبع این بخش (همان چیزی که ساخت کتاب می‌خواند)", "Quotation": "نقل‌قول", "Quotation source": "منبع نقل‌قول", "Reading": "برای مطالعه", "Remark": "تبصره", "Replace cover image": "تعویض تصویر جلد", "Replace image": "تعویض تصویر", "Replace voice": "تعویض صدا", "Research Project": "پروژهٔ پژوهشی", "Research thread": "رشتهٔ پژوهشی", "Right": "راست", "Right to left (Persian)": "راست به چپ (فارسی)", "Same as the text": "همان قلم متن", "Save as .md": "ذخیره به صورت ‎.md", "Save or cancel the block you are editing first.": "اول بلوکی را که در حال ویرایش آن هستید ذخیره یا لغو کنید.", "Save section": "ذخیرهٔ بخش", "Save to remove the cover for good.": "برای حذف همیشگی جلد ذخیره کنید.", "Saved.": "ذخیره شد.", "Saving…": "در حال ذخیره…", "Section number": "شمارهٔ بخش", "Section saved.": "بخش ذخیره شد.", "Section status": "وضعیت بخش", "Section title": "عنوان بخش", "Solution sketch (optional)": "طرح حل (اختیاری)", "Source": "منبع", "Statement": "صورت تمرین", "Status": "وضعیت", "Subheading": "زیرعنوان", "Text": "متن", "That file is too large (20 MB at most).": "این فایل خیلی بزرگ است (حداکثر ۲۰ مگابایت).", "That file type is not accepted.": "این نوع فایل پذیرفته نمی‌شود.", "The label may use only letters, digits, dashes and underscores.": "برچسب فقط می‌تواند حرف لاتین، رقم، خط تیره و زیرخط داشته باشد.", "The section needs a title.": "بخش باید عنوان داشته باشد.", "The self-check answer must be a number.": "پاسخ بررسی خودکار باید عدد باشد.", "The studio’s file storage is full.": "فضای فایل‌های استودیو پر است.", "The studio’s storage is full. Delete unused blocks or images, then try again.": "فضای استودیو پر است. بلوک‌ها یا تصویرهای بی‌استفاده را حذف کنید و دوباره امتحان کنید.", "The whole book": "کل کتاب", "Theorem": "قضیه", "Theorem-like": "قضیه‌گونه", "This block was deleted by someone else.": "این بلوک را کس دیگری حذف کرده است.", "This change was not saved: you have read-only access.": "این تغییر ذخیره نشد: دسترسی شما فقط خواندن است.", "Title": "عنوان", "To rename a chapter for all its sections, use Book settings.": "برای تغییر نام یک فصل در همهٔ بخش‌هایش از تنظیمات کتاب استفاده کنید.", "Tolerance": "خطای مجاز", "Too many uploads at once. Wait a moment and try again.": "بارگذاری‌های هم‌زمان زیاد است. کمی صبر کنید و دوباره امتحان کنید.", "Untitled book": "کتاب بی‌نام", "Untitled subheading": "زیرعنوان بی‌نام", "Upload cover image": "بارگذاری تصویر جلد", "Upload image": "بارگذاری تصویر", "Uploading needs editor access.": "بارگذاری به دسترسی ویرایشگر نیاز دارد.", "Uploading the recording…": "در حال بارگذاری صدا…", "Uploading…": "در حال بارگذاری…", "Upright": "ایستاده", "Use an .m4a, .mp4 or .webm recording. MP3 and WAV are not accepted by the store.": "صدا را با قالب ‎.m4a، ‎.mp4 یا ‎.webm بدهید. MP3 و WAV پذیرفته نمی‌شوند.", "Voice note added.": "توضیح صوتی اضافه شد.", "Voice note removed.": "توضیح صوتی حذف شد.", "What it adds here": "چه چیزی به این بخش اضافه می‌کند", "What still needs doing here, questions for each other…": "چه کارهایی مانده، پرسش‌ها برای یکدیگر…", "What the reader can do": "خواننده چه کاری می‌تواند بکند", "Who said it": "گوینده", "Years": "سال‌ها", "You can read this studio but not change it. Ask the owner for Contributor access.": "شما می‌توانید این استودیو را بخوانید اما نمی‌توانید تغییر دهید. از مالک دسترسی مشارکت‌کننده بخواهید.", "Your answer": "پاسخ شما", "book, letter, speech, year; or “attributed”": "کتاب، نامه، سخنرانی، سال؛ یا «منسوب»", "e.g. Cayley’s formula": "مثلاً اصل استقرای ریاضی", "e.g. Second proof": "مثلاً برهان دوم", "e.g. Wikimedia Commons, public domain": "مثلاً ویکی‌مدیا، مالکیت عمومی", "e.g. Your count for n = 6": "مثلاً پاسخ شما برای n = 6", "e.g. thm-cayley": "مثلاً thm-hanoi", "letters, digits and dashes; referred to as @prefix-label": "حرف لاتین، رقم و خط تیره؛ با ‎@پیشوند-برچسب ارجاع داده می‌شود", "+ Insert block": "+ افزودن بلوک", "Delete this block?": "این بلوک حذف شود؟", "Keep": "نگه دار", "Save": "ذخیره", "Ctrl+Enter saves · Esc cancels": "Ctrl+Enter ذخیره · Esc انصراف", "Formatting of this block": "قالب این بلوک", "Preview": "پیش‌نمایش", "Voice note caption": "عنوان توضیح صوتی", "Remove voice note": "حذف توضیح صوتی", "Remove the recording for good?": "صدا برای همیشه حذف شود؟", "Remove": "حذف", "Someone changed this block while you were editing it.": "کس دیگری این بلوک را هم‌زمان با شما تغییر داده است.", "Save mine anyway": "نسخهٔ من ذخیره شود", "Discard mine, show theirs": "نسخهٔ من کنار برود، نسخهٔ او را نشان بده", "Title page": "صفحهٔ عنوان", "Book title": "عنوان کتاب", "Subtitle": "زیرعنوان", "Authors (one per line)": "مؤلفان (هر سطر یک نفر)", "Edition line": "سطر ویرایش", "e.g. Draft of 6 October 2026. Shown under the subtitle.": "مثلاً پیش‌نویس مهر ۱۴۰۵. زیر زیرعنوان می‌آید.", "Cover image": "تصویر جلد", "No cover image yet. The title page shows the title and authors only.": "هنوز تصویر جلد ندارد. صفحهٔ عنوان فقط عنوان و مؤلفان را نشان می‌دهد.", "Remove cover image": "حذف تصویر جلد", "Typography": "حروف‌چینی", "Text font": "قلم متن", "Heading font": "قلم عنوان‌ها", "Default alignment of the text": "ترازبندی پیش‌فرض متن", "Writing direction": "جهت نوشتن", "Each block can override the alignment and choose bold or italic in its own editor, under “Formatting of this block”.": "هر بلوک در ویرایشگر خودش، زیر «قالب این بلوک»، می‌تواند ترازبندی را تغییر دهد یا پررنگ و مایل شود.", "Chapters": "فصل‌ها", "Renaming a chapter here renames it in every section that belongs to it. The introduction appears under the chapter title, before its first section. The preface itself is the section “Preface” in the list on the left.": "تغییر نام فصل در اینجا، نام آن را در همهٔ بخش‌هایش عوض می‌کند. مقدمهٔ فصل زیر عنوان فصل و پیش از اولین بخش می‌آید.", "Chapter title": "عنوان فصل", "Introduction (optional, Markdown and math)": "مقدمه (اختیاری، مارک‌داون و ریاضی)", "Save book settings": "ذخیرهٔ تنظیمات کتاب", "Close": "بستن", "Book language": "زبان کتاب", "Digits in numbering": "رقم‌های شماره‌گذاری", "Persian digits (۱.۲.۳)": "رقم فارسی (۱.۲.۳)", "Latin digits (1.2.3)": "رقم لاتین (1.2.3)", "English": "انگلیسی", "Persian": "فارسی", "No image yet": "هنوز تصویری ندارد", "This section is empty.": "این بخش خالی است.", "Loading blocks…": "در حال بارگذاری بلوک‌ها…", "Interface": "زبان محیط", "Principle": "اصل", "Margin note": "یادداشت حاشیه", "Hidden part (optional)": "بخش پنهان (اختیاری)", "Button for the hidden part": "نام دکمهٔ بخش پنهان", "Second hidden part (optional)": "بخش پنهان دوم (اختیاری)", "Button for the second part": "نام دکمهٔ بخش دوم", "e.g. Proof": "مثلاً اثبات", "e.g. What is wrong?": "مثلاً اشکال کجاست؟", "Solution (optional, inside the box before ♠)": "حل (اختیاری، داخل کادر و پیش از ♠)", "Name in Latin script (optional)": "نام به خط لاتین (اختیاری)", "Years (optional)": "سال‌ها (اختیاری)", "For jokes, false proofs, small questions; the hidden part opens on a click": "برای شوخی‌ها، برهان‌های نادرست و پرسش‌های کوچک؛ بخش پنهان با کلیک باز می‌شود", "New": "تازه", "Status label": "وضعیت", "M-book Studio": "استودیوی ام‌بوک", "Preview the book": "پیش‌نمایش کتاب", "Preview of the reader edition": "پیش‌نمایش نسخهٔ خواننده", "This is how readers will see the book. The published edition changes only when it is rebuilt.": "کتاب را همان‌طور که خواننده می‌بیند نشان می‌دهد. نسخهٔ منتشرشده فقط وقتی تغییر می‌کند که دوباره ساخته شود.", "Close preview": "بستن پیش‌نمایش", "Building the preview…": "در حال ساختن پیش‌نمایش…", "The preview could not be built.": "پیش‌نمایش ساخته نشد.", "Formatting of the selected text": "قالب واژه‌های انتخاب‌شده", "Bold the selected words": "پررنگ کردن واژه‌های انتخاب‌شده", "Emphasise the selected words": "تأکید بر واژه‌های انتخاب‌شده", "Mathematics": "ریاضی", "Font of the selected words": "قلم واژه‌های انتخاب‌شده", "Size of the selected words": "اندازهٔ واژه‌های انتخاب‌شده", "Size": "اندازه", "Smaller": "کوچک‌تر", "Larger": "بزرگ‌تر", "Much larger": "خیلی بزرگ‌تر", "Colour of the selected words": "رنگ واژه‌های انتخاب‌شده", "Colour": "رنگ", "Green": "سبز", "Blue": "آبی", "Red": "سرخ", "Gold": "طلایی", "Select the words first.": "اول واژه‌ها را انتخاب کنید.", "Line under the authors": "سطر زیر نام مؤلف", "e.g. Professor of Pure Mathematics, Ferdowsi University of Mashhad. Leave empty to show nothing.": "مثلاً استاد گروه ریاضی محض دانشگاه فردوسی مشهد. اگر خالی بماند چیزی نشان داده نمی‌شود.", "Font of block titles (Theorem 1.2.3, Exercise …)": "قلم عنوان بلوک‌ها (قضیه ۱.۲.۳، تمرین …)", "Font of margin notes": "قلم حاشیه‌ها", "Weight": "وزن", "From the file name": "از روی نام فایل", "Vazirmatn (Persian)": "وزیرمتن", "Noto Naskh Arabic (Persian)": "نوتو نسخ", "Markazi Text (Persian)": "مرکزی", "Noto Sans Arabic (Persian)": "نوتو سنس عربی", "Amiri (Persian)": "امیری", "Lalezar (Persian, headings)": "لاله‌زار (برای عنوان‌ها)", "Not started ": "شروع‌نشده", "Edition": "ویرایش", "You": "شما", "Uploaded fonts": "قلم‌های بارگذاری‌شده", "None yet. Upload a .woff2, .woff, .ttf or .otf file to use a font that Google Fonts does not have.": "هنوز قلمی بارگذاری نشده است. برای قلمی که در Google Fonts نیست، فایل ‎.woff2، ‎.woff، ‎.ttf یا ‎.otf آن را بارگذاری کنید.", "Font name": "نام قلم", "Upload font file": "بارگذاری فایل قلم", "Write the font name first.": "اول نام قلم را بنویسید.", "Save to remove the font for good.": "برای حذف همیشگی قلم ذخیره کنید.", "Use a .woff2, .woff, .ttf or .otf font file.": "فایل قلم باید ‎.woff2، ‎.woff، ‎.ttf یا ‎.otf باشد.", "Font uploaded. Save to keep it.": "قلم بارگذاری شد. برای نگه‌داشتن آن ذخیره کنید."};
+var FA_RX = [
+  [/^Signed in as (.*)$/, 'وارد شده با نام $1'],
+  [/^Not saved \((.*)\)\. Try again in a moment\.$/, 'ذخیره نشد ($1). کمی بعد دوباره امتحان کنید.'],
+  [/^Upload failed \((.*)\)\. Try again\.$/, 'بارگذاری نشد ($1). دوباره امتحان کنید.'],
+  [/^Could not load this section \((.*)\)\. Reload the page to try again\.$/, 'این بخش بار نشد ($1). صفحه را دوباره باز کنید.'],
+  [/^Could not save the file \((.*)\)\.$/, 'فایل ذخیره نشد ($1).'],
+  [/^Built-in drawing “(.*)”$/, 'شکل آماده «$1»'],
+  [/^New (.*)$/, null],
+  [/^Editing (.*)$/, null]
+];
+function tr(t){
+  if (LANG!=='fa' || t==null) return t;
+  var k=String(t).trim(); if(!k) return t;
+  if (Object.prototype.hasOwnProperty.call(FA,k)) return String(t).replace(k, FA[k]);
+  for (var i=0;i<FA_RX.length;i++){ var m=k.match(FA_RX[i][0]); if(m){
+    if (FA_RX[i][1]===null){ var inner=FA[m[1].trim()]; return inner ? (k.indexOf('New')===0?inner+'ی تازه':'ویرایش '+inner) : t; }
+    return k.replace(FA_RX[i][0], FA_RX[i][1]); } }
+  return t;
+}
+var ORIG = new WeakMap();
+function localize(root){
+  if (!root) return;
+  var w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT, { acceptNode:function(n){
+    if (n.nodeType===1 && (n.hasAttribute('data-nl') || /^(SCRIPT|STYLE|TEXTAREA|PRE|CODE)$/.test(n.tagName))) return NodeFilter.FILTER_REJECT;
+    return NodeFilter.FILTER_ACCEPT; }});
+  var n=root.nodeType===1&&root.hasAttribute&&root.hasAttribute('data-nl')?null:root;
+  var list=[]; while(n){ list.push(n); n=w.nextNode(); }
+  list.forEach(function(n){
+    if (n.nodeType===3){
+      if (!ORIG.has(n)) ORIG.set(n, n.nodeValue);
+      var o=ORIG.get(n), v = LANG==='fa' ? tr(o) : o;
+      if (n.nodeValue!==v) n.nodeValue=v;
+    } else if (n.nodeType===1){
+      ['placeholder','aria-label','title'].forEach(function(a){ if(!n.hasAttribute(a)) return; var key='data-o-'+a;
+        if(!n.hasAttribute(key)) n.setAttribute(key, n.getAttribute(a));
+        var o=n.getAttribute(key), v= LANG==='fa'?tr(o):o; if(n.getAttribute(a)!==v) n.setAttribute(a,v); });
+    }
+  });
+}
+var mo = new MutationObserver(function(muts){
+  if (LANG!=='fa') return;
+  muts.forEach(function(m){
+    if (m.type==='childList') m.addedNodes.forEach(function(x){ if(x.nodeType===3){ if(!(x.parentNode&&x.parentNode.closest&&x.parentNode.closest('[data-nl],textarea,pre'))) { ORIG.delete(x); localize(x.parentNode && x.parentNode.childNodes.length===1 ? x.parentNode : null) || (function(){ var v=tr(x.nodeValue); if(v!==x.nodeValue){ ORIG.set(x,x.nodeValue); x.nodeValue=v; } })(); } } else if(x.nodeType===1 && !(x.closest&&x.closest('[data-nl]'))) localize(x); });
+  });
+});
+function setLang(l){
+  LANG = l==='fa' ? 'fa' : 'en';
+  try{ localStorage.setItem('mbook-lang', LANG); }catch(e){}
+  document.documentElement.lang = LANG; document.documentElement.dir = LANG==='fa' ? 'rtl' : 'ltr';
+  localize(document.body);
+}
+
+function toast(t){ var d=document.createElement('div'); d.className='toast'; d.textContent=tr(t); document.body.appendChild(d); setTimeout(function(){d.remove();},2600); }
+
+/* ---------------- templates ---------------- */
+var TAGS = [['pure','Pure'],['cs','Computer Science'],['algorithm','Algorithm'],['code','Code'],['omath','Math Olympiad'],['oinf','Informatics Olympiad'],['research','Research Project'],['new','New']];
+var F = {
+  label:{k:'label',t:'line',label:'Label for references',hint:'letters, digits and dashes; referred to as @prefix-label',mono:true},
+  title:{k:'title',t:'line',label:'Name (optional)',hint:'e.g. Cayley’s formula'},
+  body:{k:'body',t:'md',label:'Text',rows:6}
+};
+var TYPES = {
+  paragraph:{name:'Paragraph',group:'Text',sw:'--ink-3',fields:[{k:'text',t:'md',label:'Text',rows:7,hint:'Markdown; math between dollar signs; refer with @thm-label; glossary term: [trees]{.gls key=tree}'}]},
+  heading:{name:'Subheading',group:'Text',sw:'--ink-3',fields:[{k:'title',t:'line',label:'Subheading'}]},
+  definition:{name:'Definition',group:'Theorem-like',env:'def',num:true,suit:'♣',sw:'--moss',fields:[F.label,F.title,F.body]},
+  theorem:{name:'Theorem',group:'Theorem-like',env:'thm',num:true,sw:'--ink',fields:[F.label,F.title,F.body]},
+  lemma:{name:'Lemma',group:'Theorem-like',env:'lem',num:true,sw:'--ink',fields:[F.label,F.title,F.body]},
+  proposition:{name:'Proposition',group:'Theorem-like',env:'prp',num:true,sw:'--ink',fields:[F.label,F.title,F.body]},
+  corollary:{name:'Corollary',group:'Theorem-like',env:'cor',num:true,sw:'--ink',fields:[F.label,F.title,F.body]},
+  principle:{name:'Principle',group:'Theorem-like',env:'prn',num:true,suit:'■',sw:'--clay',fields:[F.label,F.title,F.body]},
+  example:{name:'Example',group:'Theorem-like',env:'exm',num:true,suit:'♠',sw:'--slate',fields:[F.label,F.title,F.body,{k:'sol',t:'md',label:'Solution (optional, inside the box before ♠)',rows:5}]},
+  remark:{name:'Remark',group:'Theorem-like',env:'rem',num:true,suit:'♦',sw:'--clay',fields:[F.label,F.title,F.body]},
+  proof:{name:'Proof',group:'Theorem-like',sw:'--ink-2',fields:[{k:'of',t:'line',label:'Proof of (optional label)',hint:'e.g. thm-cayley',mono:true},{k:'heading',t:'line',label:'Heading (optional)',hint:'e.g. Second proof'},F.body]},
+  history:{name:'Historical note',group:'Margin',sw:'--moss',fields:[{k:'body',t:'md',label:'Note',rows:4,hint:'Placed in the margin beside the block above it'}]},
+  aside:{name:'Margin note',group:'Margin',sw:'--slate',fields:[{k:'body',t:'md',label:'Note',rows:4,hint:'For jokes, false proofs, small questions; the hidden part opens on a click'},{k:'more',t:'md',label:'Hidden part (optional)',rows:3},{k:'more_label',t:'line',label:'Button for the hidden part',hint:'e.g. Proof'},{k:'why',t:'md',label:'Second hidden part (optional)',rows:3},{k:'why_label',t:'line',label:'Button for the second part',hint:'e.g. What is wrong?'}]},
+  quote:{name:'Quotation',group:'Margin',sw:'--gold',fields:[{k:'text',t:'md',label:'Quotation',rows:3},{k:'author',t:'line',label:'Who said it'},{k:'image',t:'image',label:'Portrait (optional)'},{k:'years',t:'line',label:'Years (optional)'},{k:'source',t:'line',label:'Source',hint:'book, letter, speech, year; or “attributed”'}]},
+  person:{name:'Mathematician',group:'Margin',sw:'--gold',fields:[{k:'name',t:'line',label:'Name'},{k:'latin',t:'line',label:'Name in Latin script (optional)'},{k:'years',t:'line',label:'Years',hint:'e.g. 1821\u20131895'},{k:'image',t:'image',label:'Portrait'},{k:'credit',t:'line',label:'Portrait source and licence',hint:'e.g. Wikimedia Commons, public domain'},{k:'bio',t:'md',label:'One or two lines',rows:3},{k:'quote',t:'md',label:'A quotation by them (optional)',rows:2},{k:'qsource',t:'line',label:'Quotation source',hint:'work and year, or \u201cattributed\u201d'}]},
+  figure:{name:'Figure',group:'Media',sw:'--slate',fields:[{k:'image',t:'image',label:'Image'},{k:'caption',t:'md',label:'Caption',rows:2},{k:'alt',t:'line',label:'Description for screen readers'},{k:'label',t:'line',label:'Label for references',mono:true}]},
+  code:{name:'Code window',group:'Media',sw:'--clay',fields:[{k:'lang',t:'select',label:'Language',options:['python','sage','text']},{k:'code',t:'code',label:'Code',rows:12},{k:'runnable',t:'bool',label:'Offer “Run” in the web edition'}]},
+  lab:{name:'Interactive lab (spec)',group:'Media',sw:'--clay',fields:[{k:'title',t:'line',label:'Lab name'},{k:'body',t:'md',label:'What the reader can do',rows:5,hint:'Claude builds the widget from this description'}]},
+  exercise:{name:'Exercise',group:'Exercises & research',sw:'--moss',fields:[{k:'tags',t:'tags',label:'Kind'},{k:'body',t:'md',label:'Statement',rows:5},{k:'hints',t:'md',label:'Hints',rows:4,hint:'One hint per paragraph block; separate hints with a line ---'},{k:'solution',t:'md',label:'Solution sketch (optional)',rows:3},{k:'answer',t:'line',label:'Numeric answer for self-check (optional)',mono:true},{k:'prompt',t:'line',label:'Answer prompt',hint:'e.g. Your count for n = 6'},{k:'tol',t:'line',label:'Tolerance',hint:'0 for an exact integer',mono:true}]},
+  thread:{name:'Research thread',group:'Exercises & research',sw:'--moss',fields:[{k:'title',t:'line',label:'Title'},{k:'body',t:'md',label:'Problem, status and a first step',rows:5,hint:'Give the status with a date, e.g. “open as of 2026”'},{k:'reading',t:'md',label:'Reading',rows:2}]},
+  proofs:{name:'One number, many proofs',group:'Exercises & research',sw:'--slate',fields:[{k:'body',t:'md',label:'Text',rows:4}]},
+  authors:{name:'From the authors’ research',group:'Exercises & research',sw:'--clay',fields:[{k:'paper',t:'line',label:'Paper'},{k:'status',t:'select',label:'Status',options:['preprint','under review','accepted','published']},{k:'body',t:'md',label:'What it adds here',rows:4}]}
+};
+var GROUPS = ['Text','Theorem-like','Margin','Media','Exercises & research'];
+
+/* ---------------- markdown + math ---------------- */
+function md(src){
+  src = String(src||'');
+  var store = [];
+  var keep = function(m){ store.push(m); return 'XMATHX'+(store.length-1)+'XENDX'; };
+  var s = src.replace(/\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]/g, keep).replace(/\\\([\s\S]+?\\\)|\$[^$\n]+?\$/g, keep);
+  s = s.replace(/\[([^\]]+)\]\{\.gls key=([A-Za-z0-9_-]+)\}/g, function(_,t,k){ return '<span class="gls" title="Glossary term: '+k+'">'+t+'</span>'; });
+  s = fontSpans(s);
+  var html = window.marked ? window.marked.parse(s) : '<p>'+esc(s)+'</p>';
+  html = window.DOMPurify ? window.DOMPurify.sanitize(html) : esc(s);
+  html = html.replace(/XMATHX(\d+)XENDX/g, function(_,i){ return esc(store[+i]); });
+  html = html.replace(/@((?:thm|lem|def|exm|rem|prp|prn|cor|fig)-[A-Za-z0-9_-]+)/g, function(_,l){
+    var r = refs[l] || globalRefs[l];
+    return r ? '<span class="ref" title="@'+esc(l)+'">'+esc(r)+'</span>' : '<span class="ref miss" title="No block with this label in this section">@'+esc(l)+'</span>';
+  });
+  return html.replace(/<a /g,'<a target="_blank" rel="noopener" ');
+}
+function typeset(el){
+  if (window.MathJax && MathJax.typesetPromise){ MathJax.typesetPromise([el]).catch(function(){}); }
+  else setTimeout(function(){ typeset(el); }, 400);
+}
+
+/* ---------------- state ---------------- */
+var db=null, assets=null, user=null, downloads=null, me={id:null}, canWrite=true;
+var sections=[], current=null, blocks=[], unsubBlocks=null, refs={}, globalRefs={}, allBlocks=[];
+var editing=null; // {id, type, draft, base, after, el}
+var openIns; // undefined = no palette open; null = palette at the top
+
+function secNum(s){ return (s && s.num) ? s.num : ''; }
+function numberBlocks(){
+  refs = {}; var k=0, ex=0, pre=secNum(current);
+  blocks.forEach(function(b){
+    var T=TYPES[b.type]; b._num=null;
+    if (T && T.num){ k++; b._num = nd((pre?pre+'.':'')+k); var lb=(b.fields||{}).label; if(lb) refs[T.env+'-'+lb] = V(b.type)+' '+b._num; }
+    if (b.type==='figure'){ k++; b._num=nd((pre?pre+'.':'')+k); var fl=(b.fields||{}).label; if(fl) refs['fig-'+fl]=V('figure')+' '+b._num; }
+    if (b.type==='exercise'){ ex++; b._num=nd((pre?pre+'.':'')+ex); }
+  });
+}
+
+
+function computeGlobalRefs(){
+  var bySec={}; allBlocks.forEach(function(b){ (bySec[b.section]=bySec[b.section]||[]).push(b); });
+  var g={};
+  sections.forEach(function(sec){
+    var list=(bySec[sec.id]||[]).slice().sort(function(a,b){return (a.order||0)-(b.order||0);}), k=0;
+    list.forEach(function(b){ var T=TYPES[b.type]; if((T&&T.num)||b.type==='figure'){ k++; var lb=(b.fields||{}).label; if(lb) g[(b.type==='figure'?'fig':T.env)+'-'+lb]=V(b.type)+' '+nd((sec.num?sec.num+'.':'')+k); } });
+  });
+  globalRefs=g;
+}
+
+/* ---------------- rendering a block ---------------- */
+function audioHtml(b){
+  if (b.voice && !b.voice.asset && b.voice.caption) return '<div class="voice todo"><span class="k">'+V('voice')+'</span><span>'+esc(b.voice.caption)+' · '+(LANG==='fa'?'هنوز ضبط نشده':'not recorded yet')+'</span>'+(canWrite&&assets?'<button type="button" class="btn ghost" data-addvoice>'+tr('Upload the recording')+'</button>':'')+'</div>';
+  if (!b.voice || !b.voice.asset) return '';
+  return '<div class="voice"><span class="k">'+V('voice')+'</span><audio controls preload="none" src="/_blob/'+esc(b.voice.asset)+'"></audio>'+(b.voice.caption?'<span>'+esc(b.voice.caption)+'</span>':'')+'</div>';
+}
+function renderBody(type, f, b){
+  f = f||{}; var T=TYPES[type]||TYPES.paragraph;
+  switch(type){
+    case 'paragraph': return '<div class="r-p">'+md(f.text)+'</div>';
+    case 'heading': return '<h3 class="r-h">'+esc(f.title||V('subheading'))+'</h3>';
+    case 'definition': case 'theorem': case 'lemma': case 'proposition': case 'corollary': case 'example': case 'remark': case 'principle':
+      var head = (type==='principle' && LANG==='fa') ? esc(b&&b._num||'') : V(type)+' '+esc(b&&b._num||'');
+      return '<div class="env '+type+'"><div class="body"><span class="lab">'+head+(f.title?' ('+md(f.title).replace(/^<p>|<\/p>\s*$/g,'')+')':'')+'.</span>'+md(f.body)+(type==='example'&&f.sol?'<div class="exsol">'+md(f.sol)+'</div>':'')+'</div>'+(T.suit?'<span class="suit" aria-hidden="true">'+T.suit+'</span>':'')+'</div>';
+    case 'proof':
+      var h = f.heading ? esc(f.heading) : V('proof');
+      if (f.of){ var r=refs[f.of]||globalRefs[f.of]; h += V('of')+(r?esc(r):'<span class="ref miss">@'+esc(f.of)+'</span>'); }
+      return '<div class="r-proof"><span class="lab">'+h+'.</span> '+md(f.body).replace(/^<p>/,'<p style="display:inline">')+'<span class="qed" aria-label="end of proof">■</span><div style="clear:both"></div></div>';
+    case 'history': return '<aside class="r-margin"><span class="k">'+V('mhist')+'</span>'+md(f.body)+'</aside>';
+    case 'aside': return '<aside class="r-margin aside"><span class="k">'+V('maside')+'</span>'+md(f.body)+(f.more?'<details><summary>'+esc(f.more_label||V('more'))+'</summary>'+md(f.more)+'</details>':'')+(f.why?'<details><summary>'+esc(f.why_label||V('why'))+'</summary>'+md(f.why)+'</details>':'')+'</aside>';
+    case 'quote': return '<aside class="r-quote"><span class="k">'+V('mquote')+'</span>'+(f.image?'<img class="qimg" src="'+imgSrc(f.image)+'" alt="">':'')+'<blockquote>'+md(f.text)+'</blockquote><div class="by">— '+esc(f.author||'')+(f.years?' <span class="lat">('+esc(f.years)+')</span>':'')+(f.source?', <em>'+esc(f.source)+'</em>':'')+'</div></aside>';
+    case 'person': return '<aside class="r-person"><span class="k">'+V('mperson')+'</span><div class="pp">'+(f.image?'<img src="'+imgSrc(f.image)+'" alt="Portrait of '+esc(f.name||'')+'">':'<div class="noimg" aria-hidden="true">'+esc((f.name||'?').charAt(0))+'</div>')+'<div><strong>'+esc(f.name||'')+'</strong>'+(f.latin?' <span class="lat">'+esc(f.latin)+'</span>':'')+(f.years?' <span class="yrs">('+esc(f.years)+')</span>':'')+md(f.bio)+'</div></div>'+(f.quote?'<blockquote>'+md(f.quote)+(f.qsource?'<div class="by">\u2014 '+esc(f.qsource)+'</div>':'')+'</blockquote>':'')+(f.credit?'<div class="cr">'+V('portrait')+': '+esc(f.credit)+'</div>':'')+'</aside>';
+    case 'figure': return '<figure class="r-fig">'+(f.image&&String(f.image).indexOf('local:')===0?localFig(String(f.image).slice(6), f.alt):f.image?'<img src="/_blob/'+esc(f.image)+'" alt="'+esc(f.alt||'')+'">':'<div class="msg">'+tr('No image yet')+'</div>')+'<figcaption><strong>'+V('figure')+' '+esc(b&&b._num||'')+'.</strong> '+md(f.caption)+'</figcaption></figure>';
+    case 'code': return '<div class="r-code"><div class="k"><span>'+esc(f.lang||'python')+'</span><span>· '+nd(String(f.code||'').split('\n').length)+' '+V('lines')+'</span>'+(f.runnable?'<span>· '+V('runnable')+'</span>':'')+'</div><pre><code>'+esc(f.code||'')+'</code></pre></div>';
+    case 'lab': return '<div class="r-box lab"><span class="k">'+V('lab')+' · '+esc(f.title||'untitled')+'</span>'+md(f.body)+'</div>';
+    case 'exercise':
+      var tags=(f.tags||[]).map(function(t){ return '<span class="tag t-'+esc(t)+'">'+esc(tagName(t))+'</span>'; }).join('');
+      var hints=String(f.hints||'').split(/\n-{3,}\n/).map(function(x){return x.trim();}).filter(Boolean);
+      var out='<div class="r-ex"><div class="head"><strong>'+V('exercise')+' '+esc(b&&b._num||'')+'</strong>'+tags+'</div>'+md(f.body);
+      hints.forEach(function(h,i){ out+='<details><summary>'+V('hint')+' '+nd(i+1)+'</summary>'+md(h)+'</details>'; });
+      if (f.solution) out+='<details><summary>'+V('solution')+'</summary>'+md(f.solution)+'</details>';
+      if (f.answer) out+='<div class="ans">'+V('selfcheck')+': '+md(f.prompt||V('answer')).replace(/^<p>|<\/p>\s*$/g,'')+' → '+esc(f.answer)+(f.tol&&f.tol!=='0'?' (±'+esc(f.tol)+')':'')+'</div>';
+      return out+'</div>';
+    case 'thread': return '<div class="r-box thread"><span class="k">'+V('thread')+' · '+esc(f.title||'')+'</span>'+md(f.body)+(f.reading?'<div style="font-size:.95rem"><em>'+V('reading')+':</em> '+md(f.reading).replace(/^<p>|<\/p>\s*$/g,'')+'</div>':'')+'</div>';
+    case 'proofs': return '<div class="r-box proofs"><span class="k">'+V('proofs')+'</span>'+md(f.body)+'</div>';
+    case 'authors': return '<div class="r-box authors"><span class="k">'+V('authors')+(f.status?'<span class="pill">'+esc(f.status)+'</span>':'')+'</span>'+(f.paper?'<p style="margin:.1rem 0 .4rem"><em>'+esc(f.paper)+'</em></p>':'')+md(f.body)+'</div>';
+  }
+  return md(JSON.stringify(f));
+}
+
+
+/* figures and portraits that ship with the page (image value 'local:<file>') */
+function imgSrc(v){ v=String(v||''); return v.indexOf('local:')===0 ? 'img/'+encodeURIComponent(v.slice(6)) : '/_blob/'+esc(v); }
+var svgCache={};
+function localFig(name, alt){
+  var id='lf-'+name.replace(/[^A-Za-z0-9_-]/g,'');
+  if (svgCache[name]) return '<div class="svgwrap" role="img" aria-label="'+esc(alt||name)+'">'+svgCache[name]+'</div>';
+  fetch('figs/'+encodeURIComponent(name)+'.svg').then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(t){
+    svgCache[name]=t; $$('[data-lf="'+id+'"]').forEach(function(el){ el.innerHTML=t; });
+  }).catch(function(){ $$('[data-lf="'+id+'"]').forEach(function(el){ el.innerHTML='<div class="msg">'+esc(tr('Built-in drawing “'+name+'”'))+'</div>'; }); });
+  return '<div class="svgwrap" data-lf="'+id+'" role="img" aria-label="'+esc(alt||name)+'"></div>';
+}
+
+
+/* inline formatting: [text]{font="Kamand" size="1.3" color="clay"} -> a styled span (the build does the same) */
+var COLORS={moss:'var(--moss)',slate:'var(--slate)',clay:'var(--clay)',gold:'var(--gold)',ink2:'var(--ink-2)'};
+function fontSpans(s){
+  return String(s).replace(/\[([^\]\n]+)\]\{((?:\s*(?:font|size|color)="[^"]*")+)\s*\}/g, function(_,t,attrs){
+    var st=[]; attrs.replace(/(font|size|color)="([^"]*)"/g,function(__,k,v){
+      if(k==='font') st.push("font-family:'"+v.replace(/['";<>]/g,'')+"'");
+      if(k==='size' && /^[0-9.]+$/.test(v)) st.push('font-size:'+v+'em');
+      if(k==='color' && COLORS[v]) st.push('color:'+COLORS[v]);
+    });
+    return '<span style="'+st.join(';')+'">'+t+'</span>';
+  });
+}
+/* ---------------- book preview: the reader edition, drawn from the studio's own data ----------------
+   Renders the whole book with the reader's stylesheet and script inside an iframe, the same structure
+   the build pipeline (mkbook.py + book.lua) produces. Files shipped with the studio: reader/head.html,
+   reader/reader.js, reader/glossary.json, labs/*.html, figs/*.svg, img/*.jpg. */
+var RD = { css:null, js:null, gls:null, labs:{} };
+var LABFILES = {'سکه‌های مثلثی':'coins.html','برج هانوی':'hanoi.html','نگهبان اتاق':'room.html','مسألهٔ ژوزفیوس':'josephus.html','شکلات‌ها و ظرف‌ها':'bowls.html','تتریس کوچک':'tetris.html','مثلث خیام':'khayyam.html','صندلی‌های پریشان':'derange.html','توپ‌ها و دیوارها':'stars.html','شمول و طرد':'ie.html','گردنبندها':'necklace.html','هشت سؤال':'eight.html','اعداد اویلری':'euler.html','کاتالان در چهار جامه':'catalan4.html','حل‌گر رابطهٔ بازگشتی':'recur.html'};
+function getText(u){ return fetch(u).then(function(r){ if(!r.ok) throw new Error(u); return r.text(); }); }
+function loadReaderAssets(){
+  var jobs=[];
+  if (RD.css===null) jobs.push(getText('reader/head.html').then(function(t){RD.css=t;},function(){RD.css='';}));
+  if (RD.js===null) jobs.push(getText('reader/reader.js').then(function(t){RD.js=t;},function(){RD.js='';}));
+  if (RD.gls===null) jobs.push(getText('reader/glossary.json').then(function(t){RD.gls=JSON.parse(t);},function(){RD.gls={};}));
+  Object.keys(LABFILES).forEach(function(k){ if(!(k in RD.labs)) jobs.push(getText('labs/'+LABFILES[k]).then(function(t){RD.labs[k]=t;},function(){RD.labs[k]='';})); });
+  if(!svgCache['cover']) jobs.push(getText('figs/cover.svg').then(function(t){svgCache['cover']=t;},function(){svgCache['cover']='';}));
+  var figs={}; allBlocks.forEach(function(b){ var im=b.fields&&b.fields.image; if(b.type==='figure'&&im&&String(im).indexOf('local:')===0) figs[String(im).slice(6)]=1; });
+  Object.keys(figs).forEach(function(n){ if(!svgCache[n]) jobs.push(getText('figs/'+encodeURIComponent(n)+'.svg').then(function(t){svgCache[n]=t;},function(){svgCache[n]='';})); });
+  return Promise.all(jobs);
+}
+var FRONTS=['front','آغاز کتاب','Front matter','Start here'];
+function rAttr(t){ return esc(t).replace(/"/g,'&quot;'); }
+/* markdown for the reader: links for references, full glossary data, inline font spans */
+function mdR(src, labels){
+  src=String(src||''); var store=[];
+  var keep=function(m){ store.push(m); return 'XMATHX'+(store.length-1)+'XENDX'; };
+  var s=src.replace(/\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]/g,keep).replace(/\\\([\s\S]+?\\\)|\$[^$\n]+?\$/g,keep);
+  s=s.replace(/\[([^\]]+)\]\{\.gls key=([A-Za-z0-9_-]+)\}/g,function(_,t,k){ var g=(RD.gls||{})[k];
+    if(!g) return t; return '<span class="gls" data-key="'+rAttr(k)+'" data-term="'+rAttr(g.term)+'" data-def="'+rAttr(g.def)+'" data-wiki="'+rAttr(g.wiki)+'" data-mw="'+rAttr(g.mw||'')+'" tabindex="0">'+t+'</span>'; });
+  s=fontSpans(s);
+  var html=window.marked?window.marked.parse(s):'<p>'+esc(s)+'</p>';
+  html=window.DOMPurify?window.DOMPurify.sanitize(html,{ADD_ATTR:['tabindex']}):html;
+  html=html.replace(/XMATHX(\d+)XENDX/g,function(_,i){ return esc(store[+i]); });
+  html=html.replace(/@((?:thm|lem|def|exm|rem|prp|prn|cor|fig)-[A-Za-z0-9_-]+)/g,function(_,l){ var r=labels[l]; return r?'<a href="#'+r[1]+'">'+esc(r[0])+'</a>':'<strong>@'+esc(l)+'</strong>'; });
+  return html;
+}
+function lead(h, body){ return /^\s*<p>/.test(body) ? body.replace(/^\s*<p>/, '<p>'+h) : '<p>'+h+'</p>'+body; }
+function inl(html){ return String(html).replace(/^\s*<p>/,'').replace(/<\/p>\s*$/,''); }
+function readerHtml(){
+  var secs=sections.slice().sort(function(a,b){return (a.order||0)-(b.order||0);}).filter(function(s){return s.id!=='gallery';});
+  var by={}; allBlocks.forEach(function(b){ (by[b.section]=by[b.section]||[]).push(b); });
+  Object.keys(by).forEach(function(k){ by[k].sort(function(a,b){return (a.order||0)-(b.order||0);}); });
+  var labels={}, num={};
+  secs.forEach(function(s){ var k=0, ex=0, pre=s.num||'';
+    (by[s.id]||[]).forEach(function(b){ var T=TYPES[b.type]||{};
+      if (T.num || b.type==='figure'){ k++; b._rn=nd((pre?pre+'.':'')+k); var lb=(b.fields||{}).label;
+        var env=b.type==='figure'?'fig':T.env; b._ra=b.type==='figure'?'figure-'+(lb||k+'-'+s.id):(lb?'env-'+env+'-'+lb:'env-auto-'+b.id);
+        if(lb) labels[env+'-'+lb]=[V(b.type)+' '+b._rn, b._ra]; }
+      if (b.type==='exercise'){ ex++; b._rn=nd((pre?pre+'.':'')+ex); } }); });
+  var M=function(t){ return mdR(t,labels); };
+  function margin(inner){ return '<div class="column-margin">'+inner+'</div>'; }
+  function block(b){
+    var f=b.fields||{}, t=b.type, T=TYPES[t]||{};
+    switch(t){
+      case 'paragraph': return M(f.text);
+      case 'heading': return '<h3>'+esc(f.title||'')+'</h3>';
+      case 'proof': return '<div class="proofblock">'+lead('<strong>'+esc(f.heading||V('proof'))+'.</strong> ', M(f.body))+'</div>';
+      case 'history': return margin('<div class="mnote history">'+M(f.body)+'</div>');
+      case 'aside': return margin('<div class="mnote sidenote">'+M(f.body)+(f.more?'<details class="aside-more"><summary>'+esc(f.more_label||V('more'))+'</summary>'+M(f.more)+'</details>':'')+(f.why?'<details class="aside-why"><summary>'+esc(f.why_label||V('why'))+'</summary>'+M(f.why)+'</details>':'')+'</div>');
+      case 'quote': return margin('<div class="mnote quote">'+(f.image?'<p><img class="portrait" src="'+imgSrc(f.image)+'" alt="'+rAttr(f.author||'')+'"></p>':'')+'<blockquote>'+M(f.text)+'</blockquote><p><span class="qby">'+esc(f.author||'')+'</span>'+(f.years?' <span class="qyears">'+esc(f.years)+'</span>':'')+(f.source?', <em>'+esc(f.source)+'</em>':'')+'</p></div>');
+      case 'person': return margin('<div class="mnote person">'+(f.image?'<p><img class="portrait" src="'+imgSrc(f.image)+'" alt="'+rAttr(f.name||'')+'"></p>':'')+'<p><strong>'+esc(f.name||'')+'</strong>'+(f.latin?' <span class="latin">'+esc(f.latin)+'</span>':'')+(f.years?' <span class="years">'+esc(f.years)+'</span>':'')+'</p>'+M(f.bio)+(f.quote?'<blockquote>'+M(f.quote)+(f.qsource?'<p>— '+esc(f.qsource)+'</p>':'')+'</blockquote>':'')+'</div>');
+      case 'code': return '<pre class="'+esc(f.lang||'python')+(f.runnable?' runnable':'')+'"><code>'+esc(f.code||'')+'</code></pre>';
+      case 'figure':
+        var im=String(f.image||''), pic = im.indexOf('local:')===0 ? (svgCache[im.slice(6)]||'') : im ? '<img src="/_blob/'+esc(im)+'" alt="'+rAttr(f.alt||'')+'">' : '';
+        return '<div id="'+b._ra+'" class="bookfig">'+pic+'<p><strong>'+V('figure')+' '+b._rn+'.</strong> '+inl(M(f.caption))+'</p></div>';
+      case 'lab':
+        var lab=RD.labs[f.title]; return lab ? '<div class="labwrap">'+M(f.body)+lab+'</div>' : '<div class="box box-proofs"><div class="box-title">'+V('lab')+' · '+esc(f.title||'')+'</div>'+M(f.body)+'</div>';
+      case 'exercise':
+        var tags=(f.tags||[]).map(function(x){ return ' <span class="ex-tag ex-tag-'+esc(x)+'">'+esc(tagName(x))+'</span>'; }).join('');
+        var out='<div class="exercise"><p><strong>'+V('exercise')+' '+b._rn+'</strong>'+tags+'</p>'+M(f.body);
+        String(f.hints||'').split(/\n-{3,}\n/).map(function(x){return x.trim();}).filter(Boolean).forEach(function(h,i){ out+='<details class="reveal"><summary>'+V('hint')+' '+nd(i+1)+'</summary><div class="reveal-body">'+M(h)+'</div></details>'; });
+        if (f.solution) out+='<details class="reveal"><summary>'+V('solution')+'</summary><div class="reveal-body">'+M(f.solution)+'</div></details>';
+        if (f.answer) out+='<form class="check" data-a="'+btoa(String(f.answer))+'" data-tol="'+esc(f.tol||'0')+'"><label>'+inl(M(f.prompt||V('answer')))+'</label><input inputmode="decimal" autocomplete="off"><button type="submit">'+(LANG==='fa'?'بررسی':'Check')+'</button><output aria-live="polite"></output></form>';
+        return out+'</div>';
+      case 'thread': return '<div class="box box-thread"><div class="box-title">'+V('thread')+' · '+esc(f.title||'')+'</div>'+M(f.body)+(f.reading?'<p><em>'+V('reading')+':</em> '+inl(M(f.reading))+'</p>':'')+'</div>';
+      case 'proofs': return '<div class="box box-proofs"><div class="box-title">'+V('proofs')+'</div>'+M(f.body)+'</div>';
+      case 'authors': return '<div class="box box-authors"><div class="box-title">'+V('authors')+'</div>'+(f.paper?'<p><em>'+esc(f.paper)+'</em>'+(f.status?' · '+esc(f.status):'')+'</p>':'')+M(f.body)+'</div>';
+    }
+    if (T.num){
+      var head = (t==='principle' && LANG==='fa') ? b._rn : V(t)+' '+b._rn;
+      var body = lead('<strong>'+head+(f.title?' ('+inl(M(f.title))+')':'')+'.</strong> ', M(f.body));
+      return '<div id="'+b._ra+'" class="env env-'+t+'">'+body+(t==='example'&&f.sol?'<div class="exsol">'+M(f.sol)+'</div>':'')+'</div>';
+    }
+    return '';
+  }
+  function voice(b){ var v=b.voice; if(!v||(!v.asset&&!v.caption)) return '';
+    return v.asset ? '<div class="voice"><span class="voice-k">'+V('voice')+'</span><audio controls preload="none" src="/_blob/'+esc(v.asset)+'"></audio><span>'+esc(v.caption||'')+'</span></div>'
+      : '<div class="voice"><button type="button" class="voice-btn" disabled><svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg></button><span><span class="voice-k">'+V('voice')+'</span> '+esc(v.caption)+' <em class="voice-soon">· '+(LANG==='fa'?'به‌زودی':'soon')+'</em></span></div>'; }
+  var body=[], toc=[], chapter=null;
+  secs.forEach(function(s){
+    var ch=s.chapter||'';
+    if (ch!==chapter){ chapter=ch; if (ch && FRONTS.indexOf(ch)<0){ body.push('<h1 class="chapter" id="ch-'+esc(s.id)+'">'+esc(ch)+'</h1>'); toc.push([0,ch,'ch-'+s.id]);
+      var intro=book.chapters&&book.chapters[ch]&&book.chapters[ch].intro; if(intro) body.push(M(intro)); } }
+    var front=FRONTS.indexOf(ch)>=0, title=(s.num?nd(s.num)+' ':'')+(s.title||'');
+    body.push((front?'<h1 class="front"':'<h2')+' id="sec-'+esc(s.id)+'">'+esc(title)+(front?'</h1>':'</h2>')); toc.push([front?0:1,title,'sec-'+s.id]);
+    (by[s.id]||[]).forEach(function(b){ var h=block(b); var st=b.style||{}; var cls=[st.align?'al-'+st.align:'', st.weight==='bold'?'fw-bold':'', st.italic?'fs-italic':''].filter(Boolean).join(' ');
+      if(h) body.push(cls?'<div class="'+cls+'">'+h+'</div>':h); body.push(voice(b)); });
+  });
+  var tocHtml='<div class="contents"><p><strong>'+(LANG==='fa'?'فهرست':'Contents')+'</strong></p><ul>'+toc.map(function(x){ return '<li'+(x[0]?' style="margin-inline-start:1.2rem"':'')+'><a href="#'+x[2]+'">'+esc(x[1])+'</a></li>'; }).join('')+'</ul></div>';
+  var cover = book.cover ? '<div class="cover"><img class="cover-img" src="/_blob/'+esc(book.cover)+'" alt=""></div>' : (svgCache['cover']?'<div class="cover">'+svgCache['cover']+'</div>':'');
+  var header='<header id="title-block-header">'+(book.edition||book.subtitle?'<p class="subtitle">'+esc([book.subtitle,book.edition].filter(Boolean).join(' · '))+'</p>':'')+'<h1 class="title">'+esc(book.title||'')+'</h1>'+
+    (book.authors||[]).map(function(a){ return '<p class="author">'+esc(a)+'</p>'; }).join('')+(book.affiliation?'<p class="affiliation">'+esc(book.affiliation)+'</p>':'')+'</header>';
+  return header+cover+tocHtml+body.join('\n');
+}
+function roleCss(){
+  var c=[], fam=function(n,fb){ return n?'"'+n+'", '+fb:fb; };
+  var face=(book.fonts||[]).map(function(f){ return '@font-face{font-family:"'+String(f.name).replace(/"/g,'')+'";src:url("/_blob/'+f.asset+'");font-weight:'+(f.weight||400)+';font-display:swap}'; }).join('\n');
+  c.push(face);
+  if (book.bodyFont) c.push(':root{--f-body:'+fam(book.bodyFont,'"Vazirmatn", Tahoma, sans-serif')+'}');
+  if (book.headingFont) c.push('h1,h2,h3,#title-block-header .title{font-family:'+fam(book.headingFont,'var(--f-body)')+'}');
+  if (book.labelFont) c.push(':root{--f-label:'+fam(book.labelFont,'var(--f-body)')+'} .env > p:first-child > strong:first-child, .proofblock > p:first-child > strong:first-child, .exercise > p:first-child strong, .box-title, .lab-kicker{font-family:var(--f-label)}');
+  if (book.marginFont) c.push('.column-margin, .column-margin *{font-family:'+fam(book.marginFont,'var(--f-body)')+'}');
+  var g=[book.bodyFont,book.headingFont,book.labelFont,book.marginFont].filter(function(x){ return x && !(book.fonts||[]).some(function(f){return f.name===x;}); });
+  var link = g.length ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'+g.filter(function(x,i){return g.indexOf(x)===i;}).map(function(f){return 'family='+encodeURIComponent(f).replace(/%20/g,'+')+(f in GAXES?GAXES[f]:':wght@400;700');}).join('&')+'&display=swap">' : '';
+  return link+'<style>'+c.join('\n')+'</style>';
+}
+function openPreview(){
+  if (editing){ confirmLeave(); return; }
+  var ov=$('#preview'); ov.hidden=false; $('#pv-msg').textContent=tr('Building the preview…');
+  loadReaderAssets().then(function(){
+    var rtl=(book.direction==='rtl'), html='<!doctype html><html lang="'+(LANG==='fa'?'fa':'en')+'" dir="'+(rtl?'rtl':'ltr')+'"><head><meta charset="utf-8"><base href="'+location.href.replace(/#.*$/,'')+'">'+
+      '<meta name="viewport" content="width=device-width,initial-scale=1">'+
+      /* the reader's head.html carries its own MathJax config (for Quarto's \\(…\\) output); ours must come after it */
+      RD.css.replace(/<script>window\.MathJax=[^<]*<\/script>/,'')+
+      '<script>window.MathJax={tex:{inlineMath:[["$","$"],["\\\\(","\\\\)"]],displayMath:[["$$","$$"],["\\\\[","\\\\]"]],processEscapes:true},svg:{fontCache:"global",matchFontHeight:false}};<\/script>'+
+      '<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js" async><\/script>'+roleCss()+'</head><body>'+readerHtml()+
+      '<script>'+RD.js+'<\/script><script>(function(){var t=location.hash; })();<\/script></body></html>';
+    var fr=$('#pv-frame'); fr.srcdoc=html;
+    fr.onload=function(){ $('#pv-msg').textContent=''; try{ var d=fr.contentDocument, el=current&&d.getElementById('sec-'+current.id); if(el) el.scrollIntoView(); }catch(e){} };
+  }).catch(function(){ $('#pv-msg').textContent=tr('The preview could not be built.'); });
+}
+function closePreview(){ $('#preview').hidden=true; $('#pv-frame').srcdoc=''; }
+
+function fmtClass(st){
+  st=st||{}; var c=[];
+  if (st.align) c.push('al-'+st.align);
+  if (st.weight==='bold') c.push('fw-bold');
+  if (st.italic) c.push('fs-italic');
+  return c.join(' ');
+}
+/* ---------------- Quarto source ---------------- */
+function qmd(){
+  var out=[];
+  if (current) out.push('<!-- '+(current.num||'')+' '+(current.title||'')+' -->');
+  blocks.forEach(function(b){
+    var f=b.fields||{}, T=TYPES[b.type]||{};
+    var s='';
+    switch(b.type){
+      case 'paragraph': s=f.text||''; break;
+      case 'heading': s='### '+(f.title||''); break;
+      case 'definition': case 'theorem': case 'lemma': case 'proposition': case 'corollary': case 'example': case 'remark': case 'principle':
+        s='::: {#'+T.env+'-'+(f.label||('b'+b.id.slice(0,6)))+'}\n'+(f.title?'## '+f.title+'\n':'')+(f.body||'')+(f.sol?'\n\n::: {.exsol}\n'+f.sol+'\n:::':'')+'\n:::'; break;
+      case 'proof': s='::: {.proof}\n'+((f.heading||f.of)?'## '+(f.heading||'Proof')+(f.of?' of @'+f.of:'')+'\n':'')+(f.body||'')+'\n:::'; break;
+      case 'history': s='::: {.column-margin .history}\n'+(f.body||'')+'\n:::'; break;
+      case 'aside': s='::: {.column-margin .sidenote}\n'+(f.body||'')+(f.more?'\n\n<details> '+(f.more_label||'')+'\n\n'+f.more:'')+(f.why?'\n\n<details> '+(f.why_label||'')+'\n\n'+f.why:'')+'\n:::'; break;
+      case 'quote': s='::: {.column-margin .quote}\n> '+String(f.text||'').split('\n').join('\n> ')+'\n>\n> — '+(f.author||'')+(f.source?', *'+f.source+'*':'')+'\n:::'; break;
+      case 'person': s='::: {.column-margin .person name="'+String(f.name||'').replace(/"/g,"'")+'" years="'+(f.years||'')+'"'+(f.image?' image="assets/'+f.image+'"':'')+(f.credit?' credit="'+String(f.credit).replace(/"/g,"'")+'"':'')+'}\n'+(f.bio||'')+(f.quote?'\n\n> '+String(f.quote).split('\n').join('\n> ')+(f.qsource?'\n>\n> \u2014 '+f.qsource:''):'')+'\n:::'; break;
+      case 'figure': s='![' + (f.caption||'') + '](assets/' + (f.image||'missing') + '){' + (f.label?'#fig-'+f.label+' ':'') + 'fig-alt="' + String(f.alt||'').replace(/"/g,"'") + '"}'; break;
+      case 'code': s='```{.'+(f.lang||'python')+(f.runnable?' .runnable':'')+'}\n'+(f.code||'')+'\n```'; break;
+      case 'lab': s='::: {.lab-spec title="'+String(f.title||'').replace(/"/g,"'")+'"}\n'+(f.body||'')+'\n:::'; break;
+      case 'exercise':
+        s='::: {.exercise tags="'+(f.tags||[]).join(' ')+'"}\n'+(f.body||'');
+        String(f.hints||'').split(/\n-{3,}\n/).map(function(x){return x.trim();}).filter(Boolean).forEach(function(h){ s+='\n\n::: {.hint}\n'+h+'\n:::'; });
+        if (f.solution) s+='\n\n::: {.solution}\n'+f.solution+'\n:::';
+        if (f.answer) s+='\n\n::: {.answer value="'+f.answer+'"'+(f.tol?' tol="'+f.tol+'"':'')+'}\n'+(f.prompt||'')+'\n:::';
+        s+='\n:::'; break;
+      case 'thread': s='::: {.callout-tip}\n## Thread · '+(f.title||'')+'\n'+(f.body||'')+(f.reading?'\n\n*Reading:* '+f.reading:'')+'\n:::'; break;
+      case 'proofs': s='::: {.callout-note}\n## One number, many proofs\n'+(f.body||'')+'\n:::'; break;
+      case 'authors': s='::: {.callout-important}\n## From the authors’ research\n'+(f.paper?'*'+f.paper+'*'+(f.status?' ('+f.status+')':'')+'\n\n':'')+(f.body||'')+'\n:::'; break;
+    }
+    if (b.voice && b.voice.asset) s+='\n\n::: {.voice audio="assets/'+b.voice.asset+'"}\n'+(b.voice.caption||'')+'\n:::';
+    out.push(s);
+  });
+  return out.join('\n\n')+'\n';
+}
+
+/* ---------------- sidebar ---------------- */
+function renderToc(){
+  var toc=$('#toc'); if(!sections.length){ toc.innerHTML='<p class="msg">No sections yet.'+(canWrite?' Add the first one below.':'')+'</p>'; return; }
+  var groups={}, order=[];
+  sections.forEach(function(s){ var g=s.chapter||'Other'; if(!groups[g]){groups[g]=[];order.push(g);} groups[g].push(s); });
+  toc.innerHTML='';
+  order.forEach(function(g){
+    var box=document.createElement('div');
+    var h=document.createElement('h2'); h.textContent=g; box.appendChild(h);
+    var ul=document.createElement('ul');
+    groups[g].forEach(function(s){
+      var li=document.createElement('li'), b=document.createElement('button');
+      b.type='button'; b.className='sec'; b.setAttribute('aria-current', current&&current.id===s.id?'true':'false');
+      b.innerHTML='<span class="num"></span><span class="ttl"></span><i class="dot'+(s.status?' s-'+s.status:'')+'" title="'+esc(s.status||'not started')+'"></i>';
+      $('.num',b).textContent=nd(s.num||''); $('.ttl',b).textContent=s.title||'';
+      b.addEventListener('click',function(){ openSection(s.id); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    box.appendChild(ul); toc.appendChild(box);
+  });
+}
+
+/* ---------------- section ---------------- */
+function openSection(id){
+  if (editing && !confirmLeave()) return;
+  editing=null; openIns=undefined; settingsOpen=false; $('#secedit').hidden=true;
+  current = sections.filter(function(s){return s.id===id;})[0] || null;
+  try{ localStorage.setItem('mbook-section', id); }catch(e){}
+  renderToc(); renderHeader();
+  if (unsubBlocks){ unsubBlocks(); unsubBlocks=null; }
+  blocks=[]; $('#page').innerHTML='<p class="msg">Loading blocks…</p>';
+  if (!db || !current) return;
+  unsubBlocks = db.collection('blocks').where('section','==',current.id).onSnapshot(function(snap){
+    blocks = snap.docs.map(function(d){ var o=Object.assign({}, d.data()); o.id=d.id; return o; }).sort(function(a,b){return (a.order||0)-(b.order||0);});
+    renderPage();
+  }, function(e){ $('#page').innerHTML='<p class="msg err">Could not load this section ('+esc(e.code)+'). Reload the page to try again.</p>'; });
+}
+function confirmLeave(){ toast('Save or cancel the block you are editing first.'); var el=editing&&editing.el; if(el) el.scrollIntoView({block:'center'}); return false; }
+function renderHeader(){
+  var s=current;
+  $('#s-chap').textContent = s ? (s.chapter||'') : '';
+  $('#s-title').textContent = s ? ((s.num?nd(s.num)+'  ':'')+(s.title||'')) : 'Choose a section';
+  var st=$('#s-status'); st.disabled=!s||!canWrite; st.value = s&&s.status || '';
+  $('#b-source').disabled=!s; $('#b-secedit').disabled=!s||!canWrite;
+  $('#notes-wrap').hidden=!s; var n=$('#s-notes'); if (document.activeElement!==n) n.value = s&&s.notes || ''; n.disabled=!canWrite;
+}
+$('#s-status').addEventListener('change',function(){ if(!current) return; var v=this.value; db.doc('sections/'+current.id).update({status:v}).catch(writeFail); });
+$('#s-notes').addEventListener('change',function(){ if(!current) return; db.doc('sections/'+current.id).update({notes:this.value}).catch(writeFail); });
+function writeFail(e){
+  if (e && e.code==='invalid_argument'){ canWrite=false; applyWriteState(); toast('This change was not saved: you have read-only access.'); }
+  else if (e && e.code==='quota_exceeded'){ toast('The studio’s storage is full. Delete unused blocks or images, then try again.'); }
+  else toast('Not saved ('+(e&&e.code||'error')+'). Try again in a moment.');
+}
+
+/* ---------------- page ---------------- */
+var profilesCache={};
+function renderPage(){
+  numberBlocks();
+  var page=$('#page'); var keep = editing && editing.el;
+  page.innerHTML='';
+  if (!blocks.length && !(editing && editing.id==='new')){
+    var em=document.createElement('div'); em.className='empty';
+    em.innerHTML='<strong>This section is empty.</strong>'+(canWrite?'Add its first block: a paragraph, a definition, a historical note…':'Nothing has been written here yet.');
+    page.appendChild(em);
+    if (canWrite) page.appendChild(insertRow(null, true));
+    if (editing && editing.id==='new' && keep) page.appendChild(keep);
+    finishRender(page); return;
+  }
+  if (canWrite) page.appendChild(insertRow(null,false));
+  if (editing && editing.id==='new' && editing.after===null && keep) page.appendChild(keep);
+  blocks.forEach(function(b, i){
+    if (editing && editing.id===b.id && keep){ page.appendChild(keep); }
+    else page.appendChild(blockEl(b, i));
+    if (editing && editing.id==='new' && editing.after===b.id && keep) page.appendChild(keep);
+    if (canWrite) page.appendChild(insertRow(b.id, i===blocks.length-1));
+  });
+  finishRender(page);
+}
+function finishRender(page){
+  typeset(page);
+  var ids = blocks.map(function(b){return b.updatedBy;}).filter(Boolean);
+  if (user && ids.length){ user.profiles(ids).then(function(ps){ profilesCache=ps; $$('.meta[data-uid]',page).forEach(function(m){ var p=ps[m.dataset.uid]; m.textContent = m.dataset.when + (p&&p.name ? ' · '+p.name : ''); }); }); }
+  if (!$('#srcbox').hidden) $('#src').value = qmd();
+}
+function when(iso){ if(!iso) return ''; var d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}); }
+
+function blockEl(b, i){
+  var T=TYPES[b.type]||{name:b.type};
+  var el=document.createElement('section'); el.className='blk'; el.dataset.id=b.id;
+  var tb=document.createElement('div'); tb.className='tb';
+  tb.innerHTML='<span class="type">'+esc(tr(T.name))+'</span><span class="meta" data-uid="'+esc(b.updatedBy||'')+'" data-when="'+esc(when(b.updatedAt))+'">'+esc(when(b.updatedAt))+'</span>';
+  if (canWrite){
+    [['edit','Edit'],['up','↑'],['down','↓'],['voice', b.voice&&b.voice.asset?'Replace voice':'Add voice'],['del','Delete']].forEach(function(a){
+      if ((a[0]==='up'&&i===0)||(a[0]==='down'&&i===blocks.length-1)) return;
+      if (a[0]==='voice' && !assets) return;
+      var bt=document.createElement('button'); bt.type='button'; bt.dataset.act=a[0]; bt.textContent=a[1];
+      if (a[0]==='up') bt.setAttribute('aria-label','Move up'); if (a[0]==='down') bt.setAttribute('aria-label','Move down');
+      tb.appendChild(bt);
+    });
+  }
+  el.appendChild(tb);
+  var body=document.createElement('div'); body.setAttribute('data-nl',''); body.className=fmtClass(b.style); body.innerHTML=renderBody(b.type, b.fields, b)+audioHtml(b); el.appendChild(body);
+  el.addEventListener('dblclick',function(e){ if(canWrite && !e.target.closest('audio,details,summary,a,button')) startEdit(b); });
+  body.addEventListener('click',function(e){ if(e.target.closest('[data-addvoice]')) pickVoice(b); });
+  tb.addEventListener('click',function(e){
+    var bt=e.target.closest('button'); if(!bt) return;
+    var act=bt.dataset.act;
+    if (act==='edit') startEdit(b);
+    else if (act==='up'||act==='down') move(b, act==='up'?-1:1);
+    else if (act==='voice') pickVoice(b);
+    else if (act==='del'){
+      var c=document.createElement('span'); c.className='confirm'; c.innerHTML='Delete this block? <button type="button" data-y>Delete</button><button type="button" data-n>Keep</button>';
+      bt.replaceWith(c);
+      c.addEventListener('click',function(ev){ ev.stopPropagation(); if(ev.target.matches('[data-y]')) removeBlock(b); if(ev.target.matches('[data-n]')) renderPage(); });
+    }
+  });
+  return el;
+}
+
+function insertRow(afterId, isLast){
+  var wrap=document.createElement('div');
+  var row=document.createElement('div'); row.className='ins'+(isLast?' last':'')+(openIns===afterId?' open':'');
+  var b=document.createElement('button'); b.type='button'; b.textContent='+ Insert block'; b.setAttribute('aria-expanded', openIns===afterId?'true':'false');
+  row.appendChild(b); wrap.appendChild(row);
+  b.addEventListener('click',function(){
+    if (editing){ confirmLeave(); return; }
+    openIns = openIns===afterId ? undefined : afterId; renderPage();
+  });
+  if (openIns===afterId){
+    var pal=document.createElement('div'); pal.className='palette'; pal.setAttribute('role','menu');
+    GROUPS.forEach(function(g){
+      var gd=document.createElement('div'); gd.className='grp'; gd.innerHTML='<h4>'+esc(g)+'</h4>';
+      Object.keys(TYPES).forEach(function(k){ var T=TYPES[k]; if(T.group!==g) return;
+        var it=document.createElement('button'); it.type='button'; it.setAttribute('role','menuitem');
+        it.innerHTML='<span class="sw" style="background:var('+T.sw+')"></span>'+esc(T.name);
+        it.addEventListener('click',function(){ openIns=undefined; startNew(k, afterId); });
+        gd.appendChild(it);
+      });
+      pal.appendChild(gd);
+    });
+    wrap.appendChild(pal);
+  }
+  return wrap;
+}
+
+/* ---------------- editing ---------------- */
+function startNew(type, afterId){
+  editing={id:'new', type:type, after:afterId, draft:{}, base:null};
+  if (type==='exercise') editing.draft={tags:['pure'], tol:'0'};
+  if (type==='code') editing.draft={lang:'python', runnable:true};
+  if (type==='authors') editing.draft={status:'preprint'};
+  editing.el=buildEditor(); renderPage(); focusFirst();
+}
+function startEdit(b){
+  if (editing){ confirmLeave(); return; }
+  editing={id:b.id, type:b.type, draft:JSON.parse(JSON.stringify(b.fields||{})), base:b.updatedAt||null, voiceCaption:(b.voice&&b.voice.caption)||'', style:JSON.parse(JSON.stringify(b.style||{}))};
+  editing.el=buildEditor(); renderPage(); focusFirst();
+}
+function focusFirst(){ setTimeout(function(){ var f=editing&&editing.el&&$('input[type=text],textarea',editing.el); if(f){ f.focus(); editing.el.scrollIntoView({block:'nearest'}); } },30); }
+
+
+var PORTRAITS=[['polya','George Pólya','جورج پولیا'],['erdos','Paul Erdős','پل اردیش'],['godel','Kurt Gödel','کورت گودل'],['demorgan','Augustus De Morgan','آگوستوس دمرگان'],['catalan','Eugène Catalan','اوژن کاتالان'],['lucas','Édouard Lucas','ادوارد لوکا'],['brouwer','L. E. J. Brouwer','لوئیتزن براوئر'],['fibonacci','Fibonacci','فیبوناچی'],['fermat','Pierre de Fermat','پیر دو فرما'],['halmos','Paul Halmos','پل هالموس'],['poincare','Henri Poincaré','هانری پوانکاره'],['pascal','Blaise Pascal','بلز پاسکال'],['ulam','Stanisław Ulam','استانیسواف اولام'],['gauss','Carl Friedrich Gauss','کارل فریدریش گاوس'],['ramsey','Frank Ramsey','فرانک رمزی'],['littlewood','J. E. Littlewood','جان لیتلوود'],['knuth','Donald Knuth','دونالد کنوت'],['euler','Leonhard Euler','لئونارد اویلر'],['mobius','August Möbius','آگوست موبیوس'],['wiles','Andrew Wiles','اندرو وایلز'],['bacon','Roger Bacon','راجر بیکن'],['fontenelle','Bernard de Fontenelle','برنار دو فونتنل'],['bolyai','János Bolyai','یانوش بویویی'],['wiener','Norbert Wiener','نوربرت وینر'],['wittgenstein','Ludwig Wittgenstein','لودویگ ویتگنشتاین'],['cayley','Arthur Cayley','آرتور کیلی'],['dirichlet','P. G. L. Dirichlet','پتر گوستاو لوژون دیریکله'],['riemann','Bernhard Riemann','برنهارد ریمان']];
+function portraitPicker(cur){
+  return '<select data-builtin aria-label="'+tr('Built-in portraits')+'"><option value="">'+tr('Built-in portraits…')+'</option>'+PORTRAITS.map(function(p){ var v='local:'+p[0]+'.jpg'; return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+esc(LANG==='fa'?p[2]:p[1])+'</option>'; }).join('')+'</select>';
+}
+function mdTools(){
+  var fonts=allFonts().map(function(o){ return '<option value="'+esc(o[0])+'">'+esc(tr(o[1]))+'</option>'; }).join('');
+  return '<div class="mdtools" role="toolbar" aria-label="'+tr('Formatting of the selected text')+'">'+
+   '<button type="button" data-w="**" title="'+tr('Bold the selected words')+'"><b>B</b></button>'+
+   '<button type="button" data-w="*" title="'+tr('Emphasise the selected words')+'"><i>I</i></button>'+
+   '<button type="button" data-w="$" title="'+tr('Mathematics')+'">∑</button>'+
+   '<select data-font aria-label="'+tr('Font of the selected words')+'"><option value="">'+tr('Font of the selected words')+'</option>'+fonts+'</select>'+
+   '<select data-size aria-label="'+tr('Size of the selected words')+'"><option value="">'+tr('Size')+'</option><option value="0.85">'+tr('Smaller')+'</option><option value="1.2">'+tr('Larger')+'</option><option value="1.5">'+tr('Much larger')+'</option></select>'+
+   '<select data-color aria-label="'+tr('Colour of the selected words')+'"><option value="">'+tr('Colour')+'</option><option value="moss">'+tr('Green')+'</option><option value="slate">'+tr('Blue')+'</option><option value="clay">'+tr('Red')+'</option><option value="gold">'+tr('Gold')+'</option></select>'+
+   '</div>';
+}
+function wireTools(f){
+  var ta=$('textarea',f), bar=$('.mdtools',f);
+  function wrap(a,b){ var s0=ta.selectionStart, s1=ta.selectionEnd, v=ta.value, sel=v.slice(s0,s1);
+    if(!sel){ toast('Select the words first.'); return; }
+    var lead=sel.match(/^\s*/)[0], tail=sel.match(/\s*$/)[0], core=sel.trim();
+    ta.value=v.slice(0,s0)+lead+a+core+b+tail+v.slice(s1); ta.focus(); ta.selectionStart=s0+lead.length; ta.selectionEnd=s0+lead.length+a.length+core.length+b.length;
+    ta.dispatchEvent(new Event('input',{bubbles:true})); }
+  bar.addEventListener('click',function(e){ var bt=e.target.closest('button[data-w]'); if(bt){ var w=bt.dataset.w; wrap(w,w); } });
+  bar.addEventListener('change',function(e){ var sl=e.target; if(!sl.value) return; var k=sl.hasAttribute('data-font')?'font':sl.hasAttribute('data-size')?'size':'color'; wrap('[',']{'+k+'="'+sl.value+'"}'); sl.value=''; });
+}
+function buildEditor(){
+  var T=TYPES[editing.type], d=editing.draft, uid='e'+Date.now();
+  var el=document.createElement('section'); el.className='ed'; el.setAttribute('aria-label','Editing '+T.name);
+  var h=document.createElement('div'); h.className='edh';
+  h.innerHTML='<strong>'+(editing.id==='new'?(LANG==='fa'?esc(tr(T.name))+'ی تازه':'New '+esc(T.name)):esc(tr(T.name)))+'</strong><span class="hint">Ctrl+Enter saves · Esc cancels</span>';
+  el.appendChild(h);
+  var grid=null;
+  T.fields.forEach(function(fd){
+    var f=document.createElement('div'); f.className='f';
+    var id=uid+'-'+fd.k;
+    var lab='<label class="small" for="'+id+'">'+esc(fd.label)+'</label>';
+    if (fd.t==='line'){ f.innerHTML=lab+'<input type="text" id="'+id+'"'+(fd.mono?' class="mono" dir="ltr"':' dir="auto"')+'>'; $('input',f).value=d[fd.k]||''; }
+    else if (fd.t==='md'){ f.innerHTML=lab+mdTools()+'<textarea id="'+id+'" rows="'+(fd.rows||5)+'" class="mono" dir="auto" spellcheck="true"></textarea>'; $('textarea',f).value=d[fd.k]||''; wireTools(f); }
+    else if (fd.t==='md'||fd.t==='code'){ f.innerHTML=lab+'<textarea id="'+id+'" rows="'+(fd.rows||5)+'"'+(fd.t==='code'?' class="mono code" dir="ltr"':' class="mono" dir="auto"')+' spellcheck="'+(fd.t==='md')+'"></textarea>'; $('textarea',f).value=d[fd.k]||''; }
+    else if (fd.t==='select'){ f.innerHTML=lab+'<select id="'+id+'">'+fd.options.map(function(o){return '<option>'+esc(o)+'</option>';}).join('')+'</select>'; $('select',f).value=d[fd.k]||fd.options[0]; }
+    else if (fd.t==='bool'){ f.innerHTML='<label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" id="'+id+'"> '+esc(fd.label)+'</label>'; $('input',f).checked=!!d[fd.k]; }
+    else if (fd.t==='tags'){
+      f.innerHTML='<span class="small" style="font-family:var(--f-label);letter-spacing:.06em;font-size:.8rem;color:var(--ink-3)">'+esc(fd.label)+'</span><div class="tags" role="group" aria-label="Exercise kind"></div>';
+      var tg=$('.tags',f);
+      TAGS.forEach(function(t){ var l=document.createElement('label'); l.innerHTML='<input type="checkbox" value="'+t[0]+'" style="margin:0"><span>'+esc(tagName(t[0]))+'</span>'; $('input',l).checked=(d.tags||[]).indexOf(t[0])>=0; tg.appendChild(l); });
+    }
+    else if (fd.t==='image'){
+      f.innerHTML=lab.replace('<label','<span').replace('</label>','</span>')+'<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><button type="button" class="btn ghost" data-img>'+(d.image?'Replace image':'Upload image')+'</button><span class="msg" data-imgmsg>'+(d.image&&String(d.image).indexOf('local:')===0?esc(tr('Built-in drawing “'+String(d.image).slice(6)+'”')):d.image?'Image attached':'PNG, JPEG, SVG or WebP')+'</span></div>';
+      if (!assets){ $('[data-img]',f).disabled=true; $('[data-imgmsg]',f).textContent='Uploading needs editor access.'; }
+      $('[data-img]',f).addEventListener('click',function(){ pickImage(f); });
+      if (editing && (editing.type==='quote'||editing.type==='person')){
+        var row=$('[data-img]',f).parentNode; row.insertAdjacentHTML('beforeend', portraitPicker(d.image||'')+(d.image?'<button type="button" class="btn quiet" data-imgrm>'+tr('Remove image')+'</button>':''));
+        $('[data-builtin]',f).addEventListener('change',function(){ if(!this.value) return; var old=editing.draft.image; editing.draft.image=this.value; if(old&&String(old).indexOf('local:')!==0) editing.replacedImage=old; $('[data-imgmsg]',f).textContent=tr('Image attached'); preview(editing.el); });
+        var rm=$('[data-imgrm]',f); if(rm) rm.addEventListener('click',function(){ var old=editing.draft.image; editing.draft.image=''; if(old&&String(old).indexOf('local:')!==0) editing.replacedImage=old; $('[data-imgmsg]',f).textContent=''; this.remove(); var sb=$('[data-builtin]',f); if(sb) sb.value=''; preview(editing.el); });
+      }
+    }
+    if (fd.hint && fd.t!=='bool' && fd.t!=='tags' && fd.t!=='image'){ var hn=document.createElement('span'); hn.className='hint tex2jax_ignore'; hn.textContent=fd.hint; f.appendChild(hn); }
+    f.dataset.k=fd.k; f.dataset.t=fd.t;
+    var short = fd.t==='line'||fd.t==='select'||fd.t==='bool';
+    if (short){ if(!grid){ grid=document.createElement('div'); grid.className='grid2'; el.appendChild(grid);} grid.appendChild(f); }
+    else { grid=null; el.appendChild(f); }
+  });
+  if (editing.id!=='new'){
+    var cur=blocks.filter(function(x){return x.id===editing.id;})[0];
+    if (cur && cur.voice && cur.voice.asset){
+      var vf=document.createElement('div'); vf.className='f';
+      vf.innerHTML='<label class="small" for="'+uid+'-vc">Voice note caption</label><input type="text" id="'+uid+'-vc" data-voicecap><div class="actions" style="display:flex;gap:.5rem"><button type="button" class="btn quiet" data-rmvoice>Remove voice note</button></div>';
+      $('input',vf).value=editing.voiceCaption||'';
+      $('[data-rmvoice]',vf).addEventListener('click',function(){ var bt=this; bt.outerHTML='<span class="confirm" style="color:var(--clay);font-size:.85rem">Remove the recording for good? <button type="button" class="btn danger" data-y>Remove</button> <button type="button" class="btn quiet" data-n>Keep</button></span>'; });
+      vf.addEventListener('click',function(e){ if(e.target.matches('[data-y]')) removeVoice(cur); if(e.target.matches('[data-n]')){ readForm(editing.el); editing.el=buildEditor(); renderPage(); } });
+      el.appendChild(vf);
+    }
+  }
+  var st=editing.style||{};
+  var fm=document.createElement('div'); fm.className='f'; fm.dataset.fmt='1';
+  function seg(name, opts, val){ return '<span class="seg" role="radiogroup" aria-label="'+name+'">'+opts.map(function(o){ return '<label><input type="radio" name="'+uid+'-'+name+'" value="'+o[0]+'"'+((val||'')===o[0]?' checked':'')+'><span>'+o[1]+'</span></label>'; }).join('')+'</span>'; }
+  fm.innerHTML='<span class="small" style="font-family:var(--f-label);letter-spacing:.06em;font-size:.8rem;color:var(--ink-3)">Formatting of this block</span><div class="fmt">'+
+    seg('align',[['','Book default'],['left','Left'],['center','Centre'],['right','Right'],['justify','Justify']], st.align)+
+    seg('weight',[['','Normal'],['bold','Bold']], st.weight)+
+    seg('italic',[['','Upright'],['1','Italic']], st.italic?'1':'')+'</div>';
+  el.appendChild(fm);
+  var pv=document.createElement('div'); pv.className='prev'; pv.innerHTML='<span class="k">Preview</span><div data-pv data-nl></div>'; el.appendChild(pv);
+  var warn=document.createElement('div'); warn.hidden=true; warn.setAttribute('data-warn',''); el.appendChild(warn);
+  var act=document.createElement('div'); act.className='actions';
+  act.innerHTML='<button type="button" class="btn" data-save>Save</button><button type="button" class="btn quiet" data-cancel>Cancel</button><span class="msg" data-msg></span>';
+  el.appendChild(act);
+  var t=null;
+  el.addEventListener('input',function(){ clearTimeout(t); t=setTimeout(function(){ if(!editing||editing.el!==el) return; readForm(el); preview(el); },250); });
+  el.addEventListener('change',function(){ if(editing&&editing.el===el) readForm(el); });
+  el.addEventListener('mousedown',function(e){ if(e.target.closest('[data-save],[data-cancel]')) clearTimeout(t); });
+  el.addEventListener('keydown',function(e){
+    if ((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); save(false); }
+    if (e.key==='Escape'){ e.preventDefault(); cancel(); }
+  });
+  $('[data-save]',act).addEventListener('click',function(){ save(false); });
+  $('[data-cancel]',act).addEventListener('click',cancel);
+  setTimeout(function(){ preview(el); },0);
+  return el;
+}
+function readForm(el){
+  var d=editing.draft;
+  $$('.f',el).forEach(function(f){
+    var k=f.dataset.k, t=f.dataset.t; if(!k) return;
+    if (t==='line'){ d[k]=$('input',f).value; }
+    else if (t==='md'||t==='code'){ d[k]=$('textarea',f).value; }
+    else if (t==='select'){ d[k]=$('select',f).value; }
+    else if (t==='bool'){ d[k]=$('input',f).checked; }
+    else if (t==='tags'){ d[k]=$$('input:checked',f).map(function(x){return x.value;}); }
+  });
+  var vc=$('[data-voicecap]',el); if(vc) editing.voiceCaption=vc.value;
+  var fm=$('[data-fmt]',el);
+  if (fm){
+    var g=function(n){ var r=$('input[name$="-'+n+'"]:checked',fm); return r?r.value:''; };
+    var st={}; if(g('align')) st.align=g('align'); if(g('weight')) st.weight=g('weight'); if(g('italic')) st.italic=true;
+    editing.style=st;
+  }
+}
+function preview(el){
+  var b={_num:'…'};
+  if (editing.id!=='new'){ var cur=blocks.filter(function(x){return x.id===editing.id;})[0]; if(cur) b._num=cur._num; }
+  var box=$('[data-pv]',el); box.className=fmtClass(editing.style); box.innerHTML=renderBody(editing.type, editing.draft, b); typeset(box);
+}
+function cancel(){ editing=null; renderPage(); }
+function validate(){
+  var d=editing.draft, T=TYPES[editing.type];
+  if (T.num && d.label && !/^[A-Za-z0-9_-]+$/.test(d.label)) return 'The label may use only letters, digits, dashes and underscores.';
+  if (editing.type==='exercise' && d.answer && isNaN(Number(d.answer))) return 'The self-check answer must be a number.';
+  return null;
+}
+function save(force){
+  if (!editing) return; readForm(editing.el);
+  var msg=$('[data-msg]',editing.el), err=validate(); if(err){ msg.textContent=err; msg.className='msg err'; return; }
+  var now=new Date().toISOString(), fields=JSON.parse(JSON.stringify(editing.draft));
+  if (editing.id==='new'){
+    var order;
+    if (editing.after===null){ order = blocks.length ? (blocks[0].order||0)-1024 : 1024; }
+    else { var i=blocks.map(function(b){return b.id;}).indexOf(editing.after); var a=blocks[i], n=blocks[i+1]; order = n ? ((a.order||0)+(n.order||0))/2 : (a.order||0)+1024; }
+    var body={section:current.id, order:order, type:editing.type, fields:fields, updatedAt:now, createdAt:now};
+    if (editing.style && Object.keys(editing.style).length) body.style=editing.style;
+    if (me.id){ body.updatedBy=me.id; body.createdBy=me.id; }
+    msg.textContent='Saving…'; msg.className='msg';
+    db.collection('blocks').add(body).then(function(){ editing=null; renderPage(); }).catch(function(e){ msg.textContent=''; writeFail(e); });
+    return;
+  }
+  var cur=blocks.filter(function(x){return x.id===editing.id;})[0];
+  if (!cur){ msg.textContent='This block was deleted by someone else.'; msg.className='msg err'; return; }
+  if (!force && (cur.updatedAt||null)!==editing.base){
+    var w=$('[data-warn]',editing.el); w.hidden=false; w.className='warn';
+    w.innerHTML='<span>Someone changed this block while you were editing it.</span><button type="button" class="btn danger" data-over>Save mine anyway</button><button type="button" class="btn quiet" data-theirs>Discard mine, show theirs</button>';
+    $('[data-over]',w).onclick=function(){ save(true); }; $('[data-theirs]',w).onclick=cancel; return;
+  }
+  var patch={fields:fields, updatedAt:now}; if(me.id) patch.updatedBy=me.id;
+  patch.style=editing.style||{};
+  if (cur.voice && cur.voice.asset){ patch.voice={asset:cur.voice.asset, caption:editing.voiceCaption||''}; }
+  msg.textContent='Saving…'; msg.className='msg';
+  var oldImg=editing.replacedImage;
+  db.doc('blocks/'+cur.id).set(Object.assign({}, stripLocal(cur), patch)).then(function(){ if(oldImg&&assets) assets.delete(oldImg).catch(function(){}); editing=null; renderPage(); }).catch(function(e){ msg.textContent=''; writeFail(e); });
+}
+function stripLocal(b){ var o={}; Object.keys(b).forEach(function(k){ if(k!=='id' && k.charAt(0)!=='_') o[k]=b[k]; }); return o; }
+
+function move(b, dir){
+  var i=blocks.indexOf(b), j=i+dir; if(j<0||j>=blocks.length) return;
+  var o=blocks[j];
+  var oa=b.order||0, ob=o.order||0; if(oa===ob){ ob=oa+dir; }
+  db.doc('blocks/'+b.id).update({order:ob}).then(function(){ return db.doc('blocks/'+o.id).update({order:oa}); }).catch(writeFail);
+}
+function removeBlock(b){
+  var p = db.doc('blocks/'+b.id).delete();
+  p.then(function(){
+    var ids=[]; if(b.voice&&b.voice.asset) ids.push(b.voice.asset); if((b.type==='figure'||b.type==='person'||b.type==='quote')&&b.fields&&b.fields.image&&String(b.fields.image).indexOf('local:')!==0) ids.push(b.fields.image);
+    if (assets) ids.forEach(function(x){ assets.delete(x).catch(function(){}); });
+    toast('Block deleted.');
+  }).catch(writeFail);
+}
+
+
+/* any recording -> MP4 audio, in the browser (the asset store keeps only MP4 and WebM) */
+var MUXER_URL='https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.js';
+function loadMuxer(){ return window.Mp4Muxer ? Promise.resolve() : new Promise(function(res,rej){ var sc=document.createElement('script'); sc.src=MUXER_URL; sc.onload=function(){ res(); }; sc.onerror=function(){ rej(new Error('muxer')); }; document.head.appendChild(sc); }); }
+function convertAudio(file){
+  if (!window.AudioEncoder || !window.AudioData || !window.OfflineAudioContext) return Promise.reject(new Error('noenc'));
+  var AC=window.AudioContext||window.webkitAudioContext, SR=48000;
+  return Promise.all([file.arrayBuffer(), loadMuxer()]).then(function(r){
+    var ac=new AC(); return ac.decodeAudioData(r[0]).then(function(ab){ try{ ac.close(); }catch(e){} return ab; });
+  }).then(function(ab){
+    if (ab.duration > 25*60) throw new Error('toolong');
+    var oc=new OfflineAudioContext(1, Math.ceil(ab.duration*SR), SR), src=oc.createBufferSource(); src.buffer=ab; src.connect(oc.destination); src.start();
+    return oc.startRendering();
+  }).then(function(mono){
+    var data=mono.getChannelData(0), len=data.length;
+    var tries=[['mp4a.40.2','aac'],['opus','opus']];
+    function pick(i){ if(i>=tries.length) return Promise.reject(new Error('nocodec'));
+      var cfg={codec:tries[i][0], sampleRate:SR, numberOfChannels:1, bitrate:96000};
+      return AudioEncoder.isConfigSupported(cfg).then(function(sp){ return sp.supported ? {cfg:cfg, mux:tries[i][1]} : pick(i+1); }, function(){ return pick(i+1); }); }
+    return pick(0).then(function(p){
+      var target=new Mp4Muxer.ArrayBufferTarget(), err=null;
+      var muxer=new Mp4Muxer.Muxer({target:target, audio:{codec:p.mux, numberOfChannels:1, sampleRate:SR}, fastStart:'in-memory'});
+      var enc=new AudioEncoder({output:function(chunk,meta){ muxer.addAudioChunk(chunk,meta); }, error:function(e){ err=e; }});
+      enc.configure(p.cfg);
+      for (var off=0, N=SR/10; off<len; off+=N){ var n=Math.min(N,len-off);
+        enc.encode(new AudioData({format:'f32-planar', sampleRate:SR, numberOfFrames:n, numberOfChannels:1, timestamp:Math.round(off*1e6/SR), data:data.slice(off,off+n)})); }
+      return enc.flush().then(function(){ enc.close(); if(err) throw err; muxer.finalize(); return new Blob([target.buffer],{type:'video/mp4'}); });
+    });
+  });
+}
+/* ---------------- voice and images ---------------- */
+var voiceTarget=null;
+function pickVoice(b){ voiceTarget=b; var inp=$('#voice-file'); inp.value=''; inp.click(); }
+$('#voice-file').addEventListener('change',function(){
+  var file=this.files&&this.files[0], b=voiceTarget; if(!file||!b) return;
+  var name=(file.name||'').toLowerCase(), type=null;
+  if (/\.(m4a|mp4)$/.test(name) || /^(audio|video)\/(mp4|x-m4a|m4a)$/.test(file.type)) type='video/mp4';
+  else if (/\.webm$/.test(name) || /webm/.test(file.type)) type='video/webm';
+  var ready;
+  if (type){ toast('Uploading the recording…'); ready=Promise.resolve(file); }
+  else { toast('Converting the recording to M4A…'); ready=convertAudio(file).then(function(bl){ type='video/mp4'; toast('Uploading the recording…'); return bl; },
+           function(e){ toast(e&&e.message==='toolong' ? 'The recording is longer than 25 minutes.' : 'This browser could not convert the file. Use an .m4a recording (the voice recorder of most phones makes one).'); throw 'shown'; }); }
+  ready.then(function(blob){ return assets.upload(blob,{type:type}); }).then(function(r){
+    var old=b.voice&&b.voice.asset;
+    var patch={voice:{asset:r.id, caption:(b.voice&&b.voice.caption)||''}, updatedAt:new Date().toISOString()}; if(me.id) patch.updatedBy=me.id;
+    return db.doc('blocks/'+b.id).update(patch).then(function(){ if(old) assets.delete(old).catch(function(){}); toast('Voice note added.'); });
+  }).catch(function(e){ if(e!=='shown') uploadFail(e); });
+});
+function removeVoice(b){
+  var id=b.voice&&b.voice.asset; if(!id) return;
+  var cur=JSON.parse(JSON.stringify(stripLocal(b))); delete cur.voice; cur.updatedAt=new Date().toISOString(); if(me.id) cur.updatedBy=me.id;
+  db.doc('blocks/'+b.id).set(cur).then(function(){ assets.delete(id).catch(function(){}); editing=null; renderPage(); toast('Voice note removed.'); }).catch(writeFail);
+}
+var imgField=null;
+function pickImage(f){ imgField=f; var inp=$('#img-file'); inp.value=''; inp.click(); }
+$('#img-file').addEventListener('change',function(){
+  var file=this.files&&this.files[0], f=imgField; if(!file||!f) return;
+  if (f==='cover'){ uploadCover(file); return; }
+  if (!editing) return;
+  var m=$('[data-imgmsg]',f); m.textContent='Uploading…';
+  assets.upload(file).then(function(r){ var old=editing.draft.image; editing.draft.image=r.id; m.textContent='Image attached'; $('[data-img]',f).textContent='Replace image'; preview(editing.el); editing.replacedImage=old||null; })
+  .catch(function(e){ m.textContent=''; uploadFail(e); });
+});
+var fontName='';
+function guessWeight(n){ n=String(n).toLowerCase(); return /hairline|thin/.test(n)?200:/extralight|ultralight/.test(n)?200:/light/.test(n)?300:/medium/.test(n)?500:/semibold|demibold/.test(n)?600:/extrabold|ultrabold/.test(n)?800:/black|heavy|fat/.test(n)?900:/bold/.test(n)?700:400; }
+$('#font-file').addEventListener('change',function(){
+  var file=this.files&&this.files[0]; if(!file||!fontName||!bookDraft) return;
+  var nm=(file.name||'').toLowerCase(), type=/\.woff2$/.test(nm)?'font/woff2':/\.woff$/.test(nm)?'font/woff':/\.otf$/.test(nm)?'font/otf':/\.ttf$/.test(nm)?'font/ttf':null;
+  if(!type){ toast('Use a .woff2, .woff, .ttf or .otf font file.'); return; }
+  var wsel=$('#bk-fontweight'), weight=wsel&&wsel.value?+wsel.value:guessWeight(nm);
+  readSettings(); var m=$('#bk-fontmsg'); if(m) m.textContent=tr('Uploading…');
+  assets.upload(file,{type:type}).then(function(r){ var old=(bookDraft.fonts||[]).filter(function(f){return f.name===fontName && +(f.weight||400)===weight;}); bookDraft._oldFonts=(bookDraft._oldFonts||[]).concat(old.map(function(f){return f.asset;}));
+    bookDraft.fonts=(bookDraft.fonts||[]).filter(function(f){return !(f.name===fontName && +(f.weight||400)===weight);}).concat([{name:fontName, asset:r.id, weight:weight}]);
+    book.fonts=bookDraft.fonts; applyBrand(); renderSettings(); $('#bk-msg').textContent=tr('Font uploaded. Save to keep it.'); })
+  .catch(function(e){ if(m) m.textContent=''; uploadFail(e); });
+});
+function uploadFail(e){
+  var c=e&&e.code;
+  var t={too_large:'That file is too large (20 MB at most).',unsupported_type:'That file type is not accepted.',quota_or_state:'The studio’s file storage is full.',rate_limited:'Too many uploads at once. Wait a moment and try again.',not_granted:'Uploading needs editor access.'}[c];
+  toast(t||('Upload failed ('+(c||'error')+'). Try again.'));
+}
+
+/* ---------------- edit section ---------------- */
+$('#b-secedit').addEventListener('click',function(){
+  if(!current) return; var f=$('#secedit'); f.hidden=!f.hidden; if(f.hidden) return;
+  $('#se-num').value=current.num||''; $('#se-title').value=current.title||''; $('#se-chap').value=current.chapter||'';
+  var dl=$('#chap-list'); dl.innerHTML=''; chapterList().forEach(function(c){ var o=document.createElement('option'); o.value=c; dl.appendChild(o); });
+  $('#se-title').focus();
+});
+$('#se-cancel').addEventListener('click',function(){ $('#secedit').hidden=true; });
+$('#secedit').addEventListener('submit',function(e){
+  e.preventDefault(); if(!current) return;
+  var t=$('#se-title').value.trim(); if(!t){ toast('The section needs a title.'); return; }
+  db.doc('sections/'+current.id).update({num:$('#se-num').value.trim(), title:t, chapter:$('#se-chap').value.trim()||current.chapter||'Other'})
+    .then(function(){ $('#secedit').hidden=true; toast('Section saved.'); }).catch(writeFail);
+});
+function chapterList(){ var seen=[]; sections.forEach(function(s){ var c=s.chapter||'Other'; if(seen.indexOf(c)<0) seen.push(c); }); return seen; }
+
+/* ---------------- book settings ---------------- */
+var book={}, settingsOpen=false, bookDraft=null;
+var FONTS=[
+  ['Source Serif 4','Source Serif 4 (current)'],['EB Garamond','EB Garamond'],['Libre Baskerville','Libre Baskerville'],
+  ['Crimson Pro','Crimson Pro'],['Noto Serif','Noto Serif'],['Lora','Lora'],['Merriweather','Merriweather'],
+  ['Alegreya','Alegreya'],['Vazirmatn','Vazirmatn (Persian)'],['Noto Naskh Arabic','Noto Naskh Arabic (Persian)'],
+  ['Markazi Text','Markazi Text (Persian)'],['Noto Sans Arabic','Noto Sans Arabic (Persian)'],['Amiri','Amiri (Persian)'],['Lalezar','Lalezar (Persian, headings)']];
+/* Google Fonts axes per family; families without italics must not ask for them */
+var GAXES={'EB Garamond':':ital,wght@0,400;0,700;1,400','Libre Baskerville':':ital,wght@0,400;0,700;1,400','Crimson Pro':':ital,wght@0,400;0,700;1,400','Noto Serif':':ital,wght@0,400;0,700;1,400','Lora':':ital,wght@0,400;0,700;1,400','Merriweather':':ital,wght@0,400;0,700;1,400','Alegreya':':ital,wght@0,400;0,700;1,400',
+  'Vazirmatn':':wght@400;500;700','Noto Naskh Arabic':':wght@400;700','Markazi Text':':wght@400;700','Noto Sans Arabic':':wght@400;700','Amiri':':ital,wght@0,400;0,700;1,400','Lalezar':''};
+function allFonts(){ var seen={}; return FONTS.concat((book.fonts||[]).filter(function(f){ if(seen[f.name]) return false; seen[f.name]=1; return true; }).map(function(f){ return [f.name, f.name+' ('+(LANG==='fa'?'قلم بارگذاری‌شده':'uploaded')+')']; })); }
+function hFonts(){ return [['','Same as the text']].concat(allFonts()).concat([['Alegreya Sans SC','Alegreya Sans SC (current labels)']]); }
+function applyBrand(){
+  $('#brand-title').textContent=book.title||'Untitled book';
+  $('#brand-sub').textContent=book.subtitle||'';
+  document.title=(book.title||'M-book')+(book.lang==='fa'?' · استودیو':' · Studio');
+  var custom={}; (book.fonts||[]).forEach(function(f){ custom[f.name]=f; });
+  var ff=$('#bookfontfaces'); if(!ff){ ff=document.createElement('style'); ff.id='bookfontfaces'; document.head.appendChild(ff); }
+  ff.textContent=(book.fonts||[]).map(function(f){ return '@font-face{font-family:"'+String(f.name).replace(/"/g,'')+'";src:url("/_blob/'+f.asset+'");font-display:swap'+(f.weight?';font-weight:'+f.weight:'')+'}'; }).join('\n');
+  var fam=[book.bodyFont,book.headingFont,book.labelFont,book.marginFont].filter(function(x){return x && x!=='Source Serif 4' && x!=='Alegreya Sans SC' && !custom[x];});
+  var link=$('#bookfonts');
+  if (fam.length){
+    var href='https://fonts.googleapis.com/css2?'+fam.map(function(f){return 'family='+encodeURIComponent(f).replace(/%20/g,'+')+(f in GAXES?GAXES[f]:':wght@400;700');}).join('&')+'&display=swap';
+    if(!link){ link=document.createElement('link'); link.rel='stylesheet'; link.id='bookfonts'; document.head.appendChild(link); }
+    if(link.href!==href) link.href=href;
+  }
+  var pg=$('#page');
+  pg.style.fontFamily = book.bodyFont ? '"'+book.bodyFont+'", var(--f-body)' : '';
+  pg.style.textAlign = book.align || '';
+  pg.dir = book.direction==='rtl' ? 'rtl' : 'ltr';
+  var want = book.lang==='fa' ? 'fa' : 'en';
+  if (want!==LANG || document.documentElement.lang!==want){ setLang(want); renderToc(); if(current&&!editing) renderPage(); }
+  document.documentElement.style.setProperty('--f-head', book.headingFont ? '"'+book.headingFont+'"' : 'inherit');
+  pg.style.setProperty('--bk-head', book.headingFont ? '"'+book.headingFont+'", inherit' : 'inherit');
+  pg.style.setProperty('--bk-label', book.labelFont ? '"'+book.labelFont+'", inherit' : 'inherit');
+  pg.style.setProperty('--bk-margin', book.marginFont ? '"'+book.marginFont+'", inherit' : 'inherit');
+  var ttl=$('#s-title'); if(ttl) ttl.style.fontFamily = book.headingFont ? '"'+book.headingFont+'", var(--f-body)' : '';
+}
+$('#b-settings').addEventListener('click',function(){ if(editing){ confirmLeave(); return; } openSettings(); });
+function openSettings(){
+  settingsOpen=true; bookDraft=JSON.parse(JSON.stringify(book)); bookDraft.chapters=bookDraft.chapters||{};
+  if (unsubBlocks){ unsubBlocks(); unsubBlocks=null; } current=null; blocks=[];
+  renderToc(); renderHeader();
+  $('#s-chap').textContent='The whole book'; $('#s-title').textContent='Book settings';
+  $('#s-status').disabled=true; $('#b-secedit').disabled=true; $('#b-source').disabled=true;
+  $('#notes-wrap').hidden=true; $('#secedit').hidden=true; $('#srcbox').hidden=true;
+  renderSettings();
+}
+function renderSettings(){
+  var d=bookDraft, pg=$('#page'), ro=!canWrite?' disabled':'';
+  var opt=function(list,val){ return list.map(function(o){ return '<option value="'+esc(o[0])+'"'+((val||'')===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join(''); };
+  var chs=chapterList();
+  pg.innerHTML='<div class="ed" style="margin:0">'+
+   '<div class="set-sec" style="border:0;margin:0;padding:0"><h3>Title page</h3>'+
+    '<div class="grid2"><div class="f"><label class="small" for="bk-title">Book title</label><input type="text" id="bk-title"'+ro+'></div>'+
+    '<div class="f"><label class="small" for="bk-sub">Subtitle</label><input type="text" id="bk-sub"'+ro+'></div></div>'+
+    '<div class="grid2"><div class="f"><label class="small" for="bk-authors">Authors (one per line)</label><textarea id="bk-authors" rows="3"'+ro+'></textarea></div>'+
+    '<div class="f"><label class="small" for="bk-affil">Line under the authors</label><input type="text" id="bk-affil" dir="auto"'+ro+'><span class="hint">'+tr('e.g. Professor of Pure Mathematics, Ferdowsi University of Mashhad. Leave empty to show nothing.')+'</span></div>'+
+    '<div class="f"><label class="small" for="bk-edition">Edition line</label><input type="text" id="bk-edition"'+ro+'><span class="hint">e.g. Draft of 6 October 2026. Shown under the subtitle.</span></div></div>'+
+    '<div class="f"><span class="small" style="font-family:var(--f-label);letter-spacing:.06em;font-size:.8rem;color:var(--ink-3)">Cover image</span><div class="cover-prev">'+
+      (d.cover?'<img src="/_blob/'+esc(d.cover)+'" alt="Cover image">':'<div class="ph">No cover image yet. The title page shows the title and authors only.</div>')+
+      '<div style="display:grid;gap:.4rem"><button type="button" class="btn ghost" id="bk-cover"'+(assets&&canWrite?'':' disabled')+'>'+(d.cover?'Replace cover image':'Upload cover image')+'</button>'+
+      (d.cover?'<button type="button" class="btn quiet" id="bk-cover-rm"'+ro+'>Remove cover image</button>':'')+'<span class="msg" id="bk-cover-msg"></span></div></div></div>'+
+   '</div>'+
+   '<div class="set-sec"><h3>Typography</h3><div class="grid2">'+
+    '<div class="f"><label class="small" for="bk-font">Text font</label><select id="bk-font"'+ro+'>'+opt(allFonts(),d.bodyFont||'Source Serif 4')+'</select></div>'+
+    '<div class="f"><label class="small" for="bk-hfont">Heading font</label><select id="bk-hfont"'+ro+'>'+opt(hFonts(),d.headingFont||'')+'</select></div>'+
+    '<div class="f"><label class="small" for="bk-lfont">Font of block titles (Theorem 1.2.3, Exercise …)</label><select id="bk-lfont"'+ro+'>'+opt(hFonts(),d.labelFont||'')+'</select></div>'+
+    '<div class="f"><label class="small" for="bk-mfont">Font of margin notes</label><select id="bk-mfont"'+ro+'>'+opt(hFonts(),d.marginFont||'')+'</select></div>'+
+    '<div class="f"><label class="small" for="bk-align">Default alignment of the text</label><select id="bk-align"'+ro+'>'+opt([['justify','Justified'],['left','Left'],['center','Centre'],['right','Right']],d.align||'justify')+'</select></div>'+
+    '<div class="f"><label class="small" for="bk-dir">Writing direction</label><select id="bk-dir"'+ro+'>'+opt([['ltr','Left to right (English)'],['rtl','Right to left (Persian)']],d.direction||'ltr')+'</select></div>'+
+    '<div class="f"><label class="small" for="bk-lang">Book language</label><select id="bk-lang"'+ro+'>'+opt([['en','English'],['fa','Persian']],d.lang||'en')+'</select></div>'+
+    '<div class="f"><label class="small" for="bk-digits">Digits in numbering</label><select id="bk-digits"'+ro+'>'+opt([['','Persian digits (۱.۲.۳)'],['latin','Latin digits (1.2.3)']],d.digits||'')+'</select></div>'+
+    '</div>'+fontUploadHtml(d,ro)+'<p class="hint" style="margin:0">Each block can override the alignment and choose bold or italic in its own editor, under “Formatting of this block”.</p></div>'+
+   '<div class="set-sec"><h3>Chapters</h3><p class="hint" style="margin:0">Renaming a chapter here renames it in every section that belongs to it. The introduction appears under the chapter title, before its first section. The preface itself is the section “Preface” in the list on the left.</p><div id="bk-chaps" style="display:grid;gap:.5rem"></div></div>'+
+   '<div class="actions" style="margin-top:.6rem"><button type="button" class="btn" id="bk-save"'+ro+'>Save book settings</button><button type="button" class="btn quiet" id="bk-close">Close</button><span class="msg" id="bk-msg"></span></div>'+
+  '</div>';
+  $('#bk-title').value=d.title||''; $('#bk-sub').value=d.subtitle||''; $('#bk-authors').value=(d.authors||[]).join('\n'); $('#bk-edition').value=d.edition||''; $('#bk-affil').value=d.affiliation||'';
+  var box=$('#bk-chaps');
+  chs.forEach(function(c,i){
+    var info=d.chapters[c]||{}, row=document.createElement('div'); row.className='chap-row'; row.dataset.old=c;
+    row.innerHTML='<label class="small" for="bk-ch-'+i+'">Chapter title</label><input type="text" id="bk-ch-'+i+'" data-ctitle'+ro+'>'+
+      '<label class="small" for="bk-ci-'+i+'">Introduction (optional, Markdown and math)</label><textarea id="bk-ci-'+i+'" rows="3" class="mono" data-cintro'+ro+'></textarea>';
+    $('[data-ctitle]',row).value=c; $('[data-cintro]',row).value=info.intro||'';
+    box.appendChild(row);
+  });
+  var cb=$('#bk-cover'); if(cb) cb.addEventListener('click',function(){ imgField='cover'; var inp=$('#img-file'); inp.value=''; inp.click(); });
+  var fu=$('#bk-fontup'); if(fu) fu.addEventListener('click',function(){ var n=$('#bk-fontname').value.trim(); if(!n){ $('#bk-fontmsg').textContent=tr('Write the font name first.'); return; } fontName=n; var inp=$('#font-file'); inp.value=''; inp.click(); });
+  $$('[data-rmfont]').forEach(function(bt){ bt.addEventListener('click',function(){ readSettings(); var nm=bt.dataset.rmfont; var gone=bookDraft.fonts.filter(function(f){return f.name===nm;}); bookDraft.fonts=bookDraft.fonts.filter(function(f){return f.name!==nm;}); bookDraft._oldFonts=(bookDraft._oldFonts||[]).concat(gone.map(function(f){return f.asset;})); renderSettings(); $('#bk-msg').textContent=tr('Save to remove the font for good.'); }); });
+  var rm=$('#bk-cover-rm'); if(rm) rm.addEventListener('click',function(){ readSettings(); bookDraft._oldCover=bookDraft.cover; bookDraft.cover=''; renderSettings(); $('#bk-msg').textContent='Save to remove the cover for good.'; });
+  $('#bk-save').addEventListener('click',saveSettings);
+  $('#bk-close').addEventListener('click',closeSettings);
+}
+function fontUploadHtml(d,ro){
+  var fams=[]; (d.fonts||[]).forEach(function(f){ if(fams.indexOf(f.name)<0) fams.push(f.name); });
+  var list=fams.map(function(nm){ var ws=(d.fonts||[]).filter(function(f){return f.name===nm;}).map(function(f){return +(f.weight||400);}).sort(function(a,b){return a-b;});
+    return '<li style="display:grid;gap:.15rem"><span><strong>'+esc(nm)+'</strong> <span class="hint">'+ws.map(function(w){return nd(w);}).join(' · ')+'</span> <button type="button" class="btn quiet" data-rmfont="'+esc(nm)+'"'+ro+'>'+tr('Remove')+'</button></span>'+
+      ws.map(function(w){ return '<span style="font-family:&quot;'+esc(nm)+'&quot;;font-weight:'+w+';font-size:1.05rem">شمردنی‌ها را بشمار! ۱۲۳ — Count the countables 123</span>'; }).join('')+'</li>'; }).join('');
+  return '<div class="f" style="margin-top:.4rem"><span class="small" style="font-family:var(--f-label);font-size:.8rem;color:var(--ink-3)">'+tr('Uploaded fonts')+'</span>'+(list?'<ul style="margin:.2rem 0;padding-inline-start:1.2rem;display:grid;gap:.3rem">'+list+'</ul>':'<span class="hint">'+tr('None yet. Upload a .woff2, .woff, .ttf or .otf file to use a font that Google Fonts does not have.')+'</span>')+
+    '<div class="grid2" style="align-items:end"><div class="f"><label class="small" for="bk-fontname">'+tr('Font name')+'</label><input type="text" id="bk-fontname" dir="auto" placeholder="Yekan Bakh FaNum"'+ro+'></div>'+
+    '<div class="f"><label class="small" for="bk-fontweight">'+tr('Weight')+'</label><select id="bk-fontweight"'+ro+'><option value="">'+tr('From the file name')+'</option>'+[100,200,300,400,500,600,700,800,900].map(function(w){return '<option value="'+w+'">'+nd(w)+'</option>';}).join('')+'</select></div>'+
+    '<div class="f"><button type="button" class="btn ghost" id="bk-fontup"'+(assets&&canWrite?'':' disabled')+'>'+tr('Upload font file')+'</button><span class="msg" id="bk-fontmsg"></span></div></div></div>';
+}
+function readSettings(){
+  var d=bookDraft;
+  d.title=$('#bk-title').value.trim(); d.subtitle=$('#bk-sub').value.trim(); d.edition=$('#bk-edition').value.trim(); d.affiliation=$('#bk-affil').value.trim(); d.labelFont=$('#bk-lfont').value; d.marginFont=$('#bk-mfont').value;
+  d.authors=$('#bk-authors').value.split('\n').map(function(x){return x.trim();}).filter(Boolean);
+  d.fonts=d.fonts||[];
+  d.bodyFont=$('#bk-font').value; d.headingFont=$('#bk-hfont').value; d.align=$('#bk-align').value; d.direction=$('#bk-dir').value; d.lang=$('#bk-lang').value; d.digits=$('#bk-digits').value;
+  d._rename={}; var ch={};
+  $$('.chap-row').forEach(function(r){ var old=r.dataset.old, nw=$('[data-ctitle]',r).value.trim()||old; if(nw!==old) d._rename[old]=nw; var intro=$('[data-cintro]',r).value; if(intro.trim()) ch[nw]={intro:intro}; });
+  d.chapters=ch;
+}
+function uploadCover(file){
+  if(!assets){ toast('Uploading needs editor access.'); return; }
+  if(settingsOpen) readSettings();
+  var m=$('#bk-cover-msg'); if(m) m.textContent='Uploading…';
+  assets.upload(file).then(function(r){ bookDraft._oldCover=bookDraft._oldCover||book.cover||''; bookDraft.cover=r.id; renderSettings(); $('#bk-msg').textContent='Cover uploaded. Save to keep it.'; })
+  .catch(function(e){ if(m) m.textContent=''; uploadFail(e); });
+}
+function saveSettings(){
+  readSettings();
+  var d=bookDraft, ren=d._rename||{}, old=d._oldCover;
+  var doc={}; ['title','subtitle','edition','affiliation','authors','cover','bodyFont','headingFont','labelFont','marginFont','align','direction','lang','digits','chapters','fonts'].forEach(function(k){ if(d[k]!==undefined) doc[k]=d[k]; });
+  doc.updatedAt=new Date().toISOString(); if(me.id) doc.updatedBy=me.id;
+  var msg=$('#bk-msg'); msg.textContent='Saving…';
+  var jobs=[db.doc('settings/book').set(doc)];
+  sections.forEach(function(s){ var c=s.chapter||'Other'; if(ren[c]) jobs.push(db.doc('sections/'+s.id).update({chapter:ren[c]})); });
+  Promise.all(jobs).then(function(){
+    if(old && old!==doc.cover && assets) assets.delete(old).catch(function(){});
+    (d._oldFonts||[]).forEach(function(a){ if(assets) assets.delete(a).catch(function(){}); }); d._oldFonts=[];
+    bookDraft._oldCover=''; msg.textContent='Saved.'; toast('Book settings saved.');
+  }).catch(function(e){ msg.textContent=''; writeFail(e); });
+}
+function closeSettings(){
+  if (bookDraft && bookDraft._oldCover!==undefined && bookDraft._oldCover && bookDraft.cover!==book.cover && assets){ assets.delete(bookDraft.cover).catch(function(){}); }
+  settingsOpen=false; bookDraft=null;
+  var pick=sections[0]; if(pick) openSection(pick.id);
+}
+
+/* ---------------- source panel ---------------- */
+$('#b-preview').addEventListener('click',openPreview);
+$('#pv-close').addEventListener('click',closePreview);
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !$('#preview').hidden) closePreview(); });
+$('#b-source').addEventListener('click',function(){ var box=$('#srcbox'); box.hidden=!box.hidden; if(!box.hidden){ $('#src').value=qmd(); box.scrollIntoView({block:'nearest'}); } });
+$('#b-copy').addEventListener('click',function(){
+  var ta=$('#src'), m=$('#srcmsg');
+  try{ navigator.clipboard.writeText(ta.value).then(function(){ m.textContent='Copied.'; },function(){ ta.select(); m.textContent='Press Ctrl+C to copy.'; }); }catch(e){ ta.select(); m.textContent='Press Ctrl+C to copy.'; }
+});
+$('#b-dl').addEventListener('click',function(){
+  if(!downloads||!current) return;
+  downloads.save({filename:(current.num?current.num+' ':'')+(current.title||'section')+'.md', data:$('#src').value}).catch(function(e){ if(e&&e.code!=='declined') $('#srcmsg').textContent='Could not save the file ('+e.code+').'; });
+});
+
+/* ---------------- add section ---------------- */
+$('#addsec').addEventListener('submit',function(e){
+  e.preventDefault();
+  var num=$('#ns-num').value.trim(), title=$('#ns-title').value.trim(), chap=$('#ns-chap').value.trim();
+  if(!title){ toast('Give the section a title.'); return; }
+  var last=sections[sections.length-1], order=(last&&last.order||0)+10;
+  var id=('s'+(num||Date.now()).toString().replace(/[^A-Za-z0-9]+/g,'-')).slice(0,40);
+  if (sections.some(function(s){return s.id===id;})) id=id+'-'+Date.now().toString(36);
+  db.doc('sections/'+id).set({num:num, title:title, chapter:chap||(last&&last.chapter)||'Other', order:order, status:'', notes:''})
+    .then(function(){ $('#ns-num').value=''; $('#ns-title').value=''; openSection(id); }).catch(writeFail);
+});
+
+/* ---------------- boot ---------------- */
+function applyWriteState(){
+  $('#ro').hidden=canWrite; $('#addsec').hidden=!canWrite;
+  renderHeader(); if(current) renderPage();
+}
+function boot(){
+  document.documentElement.lang=LANG; document.documentElement.dir = LANG==='fa'?'rtl':'ltr';
+  mo.observe(document.body,{childList:true,subtree:true});
+  localize(document.body);
+  if (!window.claude || !claude.use){ $('#toc').innerHTML='<p class="msg err">Open this studio on claude.ai to load the book.</p>'; return; }
+  Promise.all([claude.use('db'), claude.use('user'), claude.use('assets'), claude.use('downloads')]).then(function(r){
+    db=r[0]; user=r[1]; assets=r[2]; downloads=r[3];
+    if (!db){ $('#toc').innerHTML='<p class="msg err">The book’s storage is not available here. Sign in on claude.ai and reload.</p>'; return; }
+    if (downloads) $('#b-dl').hidden=false;
+    if (user){
+      user.me().then(function(m){ me=m; var w=$('#who'); w.innerHTML='<img alt=""><span></span>'; $('img',w).src=m.avatarUrl; $('span',w).textContent='Signed in as '+(m.name||'you'); });
+      user.can('data.write').then(function(c){ if(c===false){ canWrite=false; applyWriteState(); } });
+    }
+    applyWriteState();
+    db.collection('sections').orderBy('order').onSnapshot(function(snap){
+      sections=snap.docs.map(function(d){ var o=Object.assign({},d.data()); o.id=d.id; return o; });
+      computeGlobalRefs();
+      if (current){ var c=sections.filter(function(s){return s.id===current.id;})[0]; if(c){ current=c; renderHeader(); } }
+      renderToc();
+      if (settingsOpen){ if(!editing) renderToc(); return; }
+      if (!current && sections.length){
+        var saved=null; try{ saved=localStorage.getItem('mbook-section'); }catch(e){}
+        var pick = sections.filter(function(s){return s.id===saved;})[0] || sections[0];
+        openSection(pick.id);
+      }
+    }, function(e){ $('#toc').innerHTML='<p class="msg err">Could not load the sections ('+esc(e.code)+').</p>'; });
+    db.doc('settings/book').onSnapshot(function(snap){
+      book = (snap && snap.exists) ? Object.assign({}, snap.data()) : {title:'Counting in Graphs', subtitle:'A Short Path to Enumerative Graph Theory', authors:['Madjid Mirzavaziri','Daniel Yaqubi']};
+      applyBrand();
+    }, function(){ applyBrand(); });
+    db.collection('blocks').onSnapshot(function(snap){
+      allBlocks=snap.docs.map(function(d){ var o=Object.assign({},d.data()); o.id=d.id; return o; });
+      var before=JSON.stringify(globalRefs); computeGlobalRefs();
+      if (current && JSON.stringify(globalRefs)!==before && !editing) renderPage();
+    }, function(){});
+  });
+}
+boot();
+})();
+</script>
+
