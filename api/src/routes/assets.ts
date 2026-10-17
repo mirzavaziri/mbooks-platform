@@ -78,7 +78,7 @@ export default async function assetRoutes(app: FastifyInstance) {
   // Direct blob fetch; bookId is not known from the URL alone (fonts/images
   // are referenced by bare asset id throughout the studio), so look it up
   // and check membership from the asset row itself.
-  app.get<{ Params: { assetId: string } }>('/_blob/:assetId', async (request, reply) => {
+  app.get<{ Params: { assetId: string } }>('/_blob/:assetId', { compress: false }, async (request, reply) => {
     const user = await requireUser(request, reply);
     if (!user) return;
 

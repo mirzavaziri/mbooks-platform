@@ -156,7 +156,7 @@ export default async function adapterRoutes(app: FastifyInstance) {
   );
 
   // ---- live updates (SSE) ----
-  app.get<{ Params: { bookId: string } }>('/api/books/:bookId/events', async (request, reply) => {
+  app.get<{ Params: { bookId: string } }>('/api/books/:bookId/events', { compress: false }, async (request, reply) => {
     const user = await requireUser(request, reply);
     if (!user) return;
     const role = await roleInBook(user.id, request.params.bookId);

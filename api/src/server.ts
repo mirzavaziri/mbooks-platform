@@ -6,6 +6,7 @@ import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import compress from '@fastify/compress';
 
 import authRoutes from './routes/auth.js';
 import bookRoutes from './routes/books.js';
@@ -22,6 +23,7 @@ const app = Fastify({ logger: true, trustProxy: true });
 
 await app.register(cookie);
 await app.register(cors, { origin: false });
+await app.register(compress, { global: true, threshold: 512 });
 await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } });
 
 await app.register(authRoutes);
