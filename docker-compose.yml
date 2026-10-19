@@ -9,9 +9,13 @@ services:
       POSTGRES_DB: mbooks
     volumes:
       - mbooks_pg_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
 
+  # No host port published - runs on the same box as EducationMarket's own
+  # nginx now (see nginx/mbooks.conf there), reached by container name over
+  # the shared educationmarket_bazar_network instead of a Germany<->Arvan
+  # SSH tunnel (that tunnel - mbooks-tunnel.service - is what made the
+  # studio feel slow; moving the app itself onto Arvan removes that hop
+  # entirely rather than just caching around it).
   api:
     build:
       context: ./api
@@ -28,8 +32,14 @@ services:
     volumes:
       - mbooks_data:/data
       - ./studio:/studio:ro
-    ports:
-      - "127.0.0.1:${API_PORT:-3300}:3300"
+    networks:
+      - default
+      - bazar_network
+
+networks:
+  bazar_network:
+    name: educationmarket_bazar_network
+    external: true
 
 volumes:
   mbooks_pg_data:
