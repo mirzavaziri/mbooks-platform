@@ -65,7 +65,17 @@ app.get<{ Params: { bookId: string } }>('/book/:bookId', async (request, reply) 
   const role = await roleInBook(user.id, request.params.bookId);
   if (!role) return reply.code(404).type(HTML).send('<p>Book not found, or you are not a member of it.</p>');
 
-  const bootstrap = `<script>
+  // Starts by putting back the exact text STUDIO_ANCHOR matches (the
+  // MathJax <script> tag + the next tag's opening) - a plain
+  // .replace(STUDIO_ANCHOR, bootstrap) without this silently dropped the
+  // MathJax <script src> tag itself (it's inside the matched anchor),
+  // leaving window.MathJax as just the inline config object with no
+  // typesetPromise ever defined - every formula on every page rendered
+  // as raw, un-typeset $...$ text, with no console error anywhere to
+  // point at it (confirmed in production 2026-10-21 via a headless
+  // Chromium check: window.MathJax existed, window.MathJax.typesetPromise
+  // did not, and the vendor script tag was simply missing from the DOM).
+  const bootstrap = `${STUDIO_ANCHOR}
     window.__MBOOK_ID__=${JSON.stringify(request.params.bookId)};
     window.__MBOOK_USER__=${JSON.stringify({ id: user.id, name: user.name, color: user.color, role })};
   </script>
