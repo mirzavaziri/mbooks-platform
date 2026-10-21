@@ -344,7 +344,14 @@ mjx-container{ direction:ltr; unicode-bidi:isolate }
 <input type="file" id="inline-img-file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" hidden>
 
 <script>
-window.MathJax = { tex:{ inlineMath:[['$','$'],['\\(','\\)']], displayMath:[['$$','$$'],['\\[','\\]']] }, svg:{ fontCache:'global', matchFontHeight:false }, startup:{ typeset:false } };
+// fontCache:'local' (not 'global') - this page's own innerHTML gets wiped
+// and rebuilt on every renderPage() (a very frequent event here, since
+// edits sync live across authors), which destroys the <defs> element
+// MathJax's global SVG font cache expects to keep reusing. The resulting
+// references go stale, which silently corrupts every later typeset call
+// on this page (swallowed by typeset()'s own .catch) - 'local' makes each
+// equation self-contained, immune to the surrounding DOM being replaced.
+window.MathJax = { tex:{ inlineMath:[['$','$'],['\\(','\\)']], displayMath:[['$$','$$'],['\\[','\\]']] }, svg:{ fontCache:'local', matchFontHeight:false }, startup:{ typeset:false } };
 </script>
 <script src="/vendor/marked.min.js"></script>
 <script src="/vendor/purify.min.js"></script>
@@ -705,7 +712,7 @@ function openPreview(){
       '<meta name="viewport" content="width=device-width,initial-scale=1">'+
       /* the reader's head.html carries its own MathJax config (for Quarto's \\(…\\) output); ours must come after it */
       RD.css.replace(/<script>window\.MathJax=[^<]*<\/script>/,'')+
-      '<script>window.MathJax={tex:{inlineMath:[["$","$"],["\\\\(","\\\\)"]],displayMath:[["$$","$$"],["\\\\[","\\\\]"]],processEscapes:true},svg:{fontCache:"global",matchFontHeight:false}};<\/script>'+
+      '<script>window.MathJax={tex:{inlineMath:[["$","$"],["\\\\(","\\\\)"]],displayMath:[["$$","$$"],["\\\\[","\\\\]"]],processEscapes:true},svg:{fontCache:"local",matchFontHeight:false}};<\/script>'+
       '<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js" async><\/script>'+roleCss()+'</head><body>'+readerHtml()+
       '<script>'+RD.js+'<\/script><script>(function(){var t=location.hash; })();<\/script></body></html>';
     var fr=$('#pv-frame'); fr.srcdoc=html;
