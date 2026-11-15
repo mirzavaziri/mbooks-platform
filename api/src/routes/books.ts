@@ -7,16 +7,25 @@ const BOOK_TYPES = ['textbook-en', 'textbook-fa', 'fiction-fa'] as const;
 const ROLES: BookRole[] = ['owner', 'author', 'editor', 'reviewer'];
 
 export default async function bookRoutes(app: FastifyInstance) {
-  // Library: books the current user is a member of.
+  // Library: books the current user is a member of, plus every public book
+  // (readable by anyone with a session even without membership - see
+  // roleInBook in lib/auth.ts), plus everything if the user is an admin.
   app.get('/api/books', async (request, reply) => {
     const user = await requireUser(request, reply);
     if (!user) return;
 
     const { rows } = await pool.query(
-      `select b.id, b.slug, b.type, b.title, b.visibility, bm.role
+      `select b.id, b.slug, b.type, b.title, b.visibility,
+              case
+                when u.is_admin then 'owner'
+                when bm.role is not null then bm.role
+                when b.visibility = 'public' then 'reviewer'
+              end as role
          from books b
-         join book_members bm on bm.book_id = b.id
-        where bm.user_id = $1 and b.deleted_at is null
+         join users u on u.id = $1
+         left join book_members bm on bm.book_id = b.id and bm.user_id = $1
+        where b.deleted_at is null
+          and (u.is_admin or bm.role is not null or b.visibility = 'public')
         order by b.updated_at desc`,
       [user.id],
     );
@@ -117,7 +126,7 @@ export default async function bookRoutes(app: FastifyInstance) {
     if (!role) return reply.code(404).send({ error: 'not_found' });
 
     const { rows } = await pool.query(
-      `select u.id, u.name, u.email, u.avatar_url, u.color, bm.role
+      `select u.id, u.name, u.email, u.phone, u.avatar_url, u.color, bm.role
          from book_members bm join users u on u.id = bm.user_id
         where bm.book_id = $1 order by bm.created_at asc`,
       [request.params.bookId],
@@ -193,6 +202,32 @@ export default async function bookRoutes(app: FastifyInstance) {
       client.release();
     }
   });
+
+  // Grant (or change) a book role for a user who already has an mbooks
+  // account - typically from signing in once via the gateway SSO handoff -
+  // by phone, without the e-mail invite-link round trip above. Owner-only.
+  app.post<{ Params: { bookId: string }; Body: { phone: string; role: BookRole } }>(
+    '/api/books/:bookId/members',
+    async (request, reply) => {
+      const user = await requireUser(request, reply);
+      if (!user) return;
+      const role = await roleInBook(user.id, request.params.bookId);
+      if (!roleAtLeast(role, 'owner')) return reply.code(403).send({ error: 'forbidden' });
+
+      const { phone, role: grantedRole } = request.body ?? {};
+      if (!phone || !ROLES.includes(grantedRole)) return reply.code(400).send({ error: 'invalid_fields' });
+
+      const target = await pool.query('select id from users where phone = $1', [phone.trim()]);
+      if (!target.rows[0]) return reply.code(404).send({ error: 'no_such_user' });
+
+      await pool.query(
+        `insert into book_members (book_id, user_id, role) values ($1, $2, $3)
+         on conflict (book_id, user_id) do update set role = excluded.role`,
+        [request.params.bookId, target.rows[0].id, grantedRole],
+      );
+      return reply.send({ ok: true });
+    },
+  );
 
   app.patch<{ Params: { bookId: string; userId: string }; Body: { role: BookRole } }>(
     '/api/books/:bookId/members/:userId',

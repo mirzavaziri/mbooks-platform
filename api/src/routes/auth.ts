@@ -5,9 +5,11 @@ import {
   createSession,
   currentUser,
   destroySession,
+  findOrCreateSsoUser,
   hashToken,
   newOpaqueToken,
   requireUser,
+  verifySsoToken,
 } from '../lib/auth.js';
 
 export default async function authRoutes(app: FastifyInstance) {
@@ -32,6 +34,23 @@ export default async function authRoutes(app: FastifyInstance) {
 
     await createSession(row.id, request.headers['user-agent'], reply);
     return reply.send({ ok: true });
+  });
+
+  // Handoff from the arith.land gateway: a browser navigation carrying a
+  // short-lived signed token (minted by bazaar right after its own
+  // phone-OTP login), so a gateway user never has to sign in separately
+  // here. Finds-or-creates the mbooks account by phone and starts a normal
+  // session, then sends the browser on to the library.
+  app.get<{ Querystring: { token?: string } }>('/api/auth/sso', async (request, reply) => {
+    const token = request.query.token;
+    if (!token) return reply.code(400).send({ error: 'missing_token' });
+
+    const payload = verifySsoToken(token);
+    if (!payload) return reply.code(401).send({ error: 'invalid_or_expired_token' });
+
+    const userId = await findOrCreateSsoUser(payload);
+    await createSession(userId, request.headers['user-agent'], reply);
+    return reply.redirect('/library');
   });
 
   app.post('/api/auth/logout', async (request, reply) => {

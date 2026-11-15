@@ -74,7 +74,7 @@
 
   get('/api/auth/me').then(function (r) {
     if (!r.user) { location.href = '/login'; return; }
-    document.getElementById('who').textContent = r.user.name + ' · ' + r.user.email;
+    document.getElementById('who').textContent = r.user.name + ' · ' + (r.user.email || r.user.phone || '');
     if (r.user.isAdmin) document.getElementById('admin-panel').hidden = false;
     loadBooks();
   });
@@ -90,12 +90,13 @@
       var grid = document.getElementById('books-grid');
       if (!r.books.length) { grid.innerHTML = '<p style="opacity:.7">No books yet — create one below.</p>'; return; }
       grid.innerHTML = r.books.map(function (b) {
+        var canEdit = b.role !== 'reviewer';
         return '<div class="card">' +
           '<h3>' + esc(b.title || b.slug) + '</h3>' +
           '<div class="meta">' + esc(TYPE_LABEL[b.type] || b.type) + ' · role: ' + esc(b.role) + '</div>' +
           '<div class="row">' +
-          '<a class="btn" href="/book/' + b.id + '">Open studio</a>' +
-          '<a class="btn secondary" href="/book/' + b.id + '/people">People</a>' +
+          '<a class="btn" href="/book/' + b.id + '">' + (canEdit ? 'Open studio' : 'Read (studio view)') + '</a>' +
+          (canEdit ? '<a class="btn secondary" href="/book/' + b.id + '/people">People</a>' : '') +
           '</div></div>';
       }).join('');
     });

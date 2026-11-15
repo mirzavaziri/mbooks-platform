@@ -29,6 +29,7 @@ services:
       NODE_ENV: production
       MBOOKS_DATA_DIR: /data
       MBOOKS_STUDIO_DIR: /studio
+      MBOOKS_SSO_SECRET: ${MBOOKS_SSO_SECRET}
     volumes:
       - mbooks_data:/data
       - ./studio:/studio:ro

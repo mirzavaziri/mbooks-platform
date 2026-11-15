@@ -28,8 +28,23 @@
     <table id="members-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead><tbody></tbody></table>
   </div>
 
+  <div class="panel" id="grant-panel" hidden>
+    <strong style="font-size:.92rem">Grant access to someone who already signed in (by phone)</strong>
+    <div style="display:flex; gap:.5rem; margin-top:.6rem; flex-wrap:wrap">
+      <input id="grant-phone" type="tel" placeholder="phone, e.g. +98912..." style="flex:1">
+      <select id="grant-role">
+        <option value="reviewer">reviewer</option>
+        <option value="editor">editor</option>
+        <option value="author">author</option>
+        <option value="owner">owner</option>
+      </select>
+      <button style="border-color:#2f6b5a; color:#2f6b5a" id="grant-btn">Grant</button>
+    </div>
+    <p class="msg" id="grant-msg"></p>
+  </div>
+
   <div class="panel" id="invite-panel" hidden>
-    <strong style="font-size:.92rem">Invite someone</strong>
+    <strong style="font-size:.92rem">Invite someone (no account yet - by e-mail)</strong>
     <div style="display:flex; gap:.5rem; margin-top:.6rem; flex-wrap:wrap">
       <input id="inv-email" type="email" placeholder="email" style="flex:1">
       <select id="inv-role">
@@ -63,7 +78,10 @@
     });
     get('/api/books/' + bookId + '/members').then(function (r) {
       var isOwner = myRole === 'owner';
-      if (isOwner) document.getElementById('invite-panel').hidden = false;
+      if (isOwner) {
+        document.getElementById('grant-panel').hidden = false;
+        document.getElementById('invite-panel').hidden = false;
+      }
       document.querySelector('#members-table tbody').innerHTML = r.members.map(function (m) {
         var roleCell = isOwner
           ? '<select data-user="' + m.id + '">' + ROLES.map(function (ro) {
@@ -71,7 +89,7 @@
             }).join('') + '</select>'
           : esc(m.role);
         var removeCell = isOwner ? '<button data-remove="' + m.id + '">Remove</button>' : '';
-        return '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.email) + '</td><td>' + roleCell + '</td><td>' + removeCell + '</td></tr>';
+        return '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.email || m.phone) + '</td><td>' + roleCell + '</td><td>' + removeCell + '</td></tr>';
       }).join('');
 
       document.querySelectorAll('select[data-user]').forEach(function (sel) {
@@ -88,6 +106,27 @@
     });
   }
   load();
+
+  document.getElementById('grant-btn').onclick = function () {
+    var msg = document.getElementById('grant-msg');
+    msg.className = 'msg'; msg.textContent = '';
+    send('POST', '/api/books/' + bookId + '/members', {
+      phone: document.getElementById('grant-phone').value.trim(),
+      role: document.getElementById('grant-role').value,
+    }).then(function (r) {
+      if (!r.ok) {
+        msg.className = 'msg err';
+        msg.textContent = r.data.error === 'no_such_user'
+          ? 'No one has signed in with that phone yet - ask them to sign in through arith.land first.'
+          : 'Could not grant access.';
+        return;
+      }
+      msg.className = 'msg ok';
+      msg.textContent = 'Done.';
+      document.getElementById('grant-phone').value = '';
+      load();
+    });
+  };
 
   document.getElementById('inv-btn').onclick = function () {
     var msg = document.getElementById('inv-msg');
