@@ -31,6 +31,12 @@ services:
       MBOOKS_STUDIO_DIR: /studio
       MBOOKS_SSO_SECRET: ${MBOOKS_SSO_SECRET}
       MBOOKS_PUBLISH_DIR: /published
+      # Same ZarinPal merchant account bazaar already uses (see
+      # backend/config/services.php there) - financial support here is
+      # an independent transaction, not tied to the bazaar wallet, but
+      # there was no reason to register a second merchant for it.
+      ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID}
+      ZARINPAL_SANDBOX: "false"
     volumes:
       - mbooks_data:/data
       - ./studio:/studio:ro

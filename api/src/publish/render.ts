@@ -3,6 +3,7 @@ import type { GlossaryEntry, InlineContext } from './inline.js';
 import { buildNumbering, type BlockRow, type SectionRow } from './numbering.js';
 import { renderBlock, type AssetResolver } from './blocks.js';
 import { renderPage, type PageFont } from './page.js';
+import { renderSupportWidget, supportStyles } from './support.js';
 
 export type PublishResult = { html: string; warnings: string[] };
 
@@ -128,6 +129,11 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
     if (url) fonts.push({ family: f.name, url, weight: f.weight });
     else warnings.push(`font asset not found: ${f.asset}`);
   }
+
+  // The financial-support widget goes on every published book regardless
+  // of its own language/direction - this is arith.land's own voice, not
+  // part of the book's running text.
+  bodyParts.push(`<style>${supportStyles()}</style>`, renderSupportWidget(book.slug));
 
   const html = renderPage(
     {
