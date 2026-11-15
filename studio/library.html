@@ -91,16 +91,38 @@
       if (!r.books.length) { grid.innerHTML = '<p style="opacity:.7">No books yet — create one below.</p>'; return; }
       grid.innerHTML = r.books.map(function (b) {
         var canEdit = b.role !== 'reviewer';
-        return '<div class="card">' +
+        var canPublish = canEdit && b.role !== 'editor'; // author or owner
+        return '<div class="card" data-book="' + b.id + '" data-slug="' + esc(b.slug) + '">' +
           '<h3>' + esc(b.title || b.slug) + '</h3>' +
-          '<div class="meta">' + esc(TYPE_LABEL[b.type] || b.type) + ' · role: ' + esc(b.role) + '</div>' +
+          '<div class="meta">' + esc(TYPE_LABEL[b.type] || b.type) + ' · role: ' + esc(b.role) + ' · ' + esc(b.visibility) + '</div>' +
           '<div class="row">' +
-          '<a class="btn" href="/book/' + b.id + '">' + (canEdit ? 'Open studio' : 'Read (studio view)') + '</a>' +
+          '<a class="btn secondary" href="/' + esc(b.slug) + '/" target="_blank">Read published</a>' +
+          '<a class="btn" href="/book/' + b.id + '">' + (canEdit ? 'Open studio' : 'Studio view') + '</a>' +
           (canEdit ? '<a class="btn secondary" href="/book/' + b.id + '/people">People</a>' : '') +
-          '</div></div>';
+          (canPublish ? '<button class="secondary" data-publish="' + b.id + '">Publish</button>' : '') +
+          '</div><p class="msg" data-publish-msg="' + b.id + '"></p></div>';
       }).join('');
+      $$('button[data-publish]').forEach(function (btn) {
+        btn.onclick = function () {
+          var id = btn.dataset.publish;
+          var msg = document.querySelector('[data-publish-msg="' + id + '"]');
+          btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Publishing…';
+          post('/api/books/' + id + '/publish', {}).then(function (r) {
+            btn.disabled = false;
+            if (!r.ok) {
+              msg.className = 'msg err';
+              msg.textContent = 'Could not publish (' + (r.data.message || r.data.error) + ').';
+              return;
+            }
+            msg.className = 'msg ok';
+            var warnText = r.data.warnings.length ? ' with ' + r.data.warnings.length + ' warning(s): ' + esc(r.data.warnings.join('; ')) : '.';
+            msg.innerHTML = 'Published' + warnText + ' — <a href="' + r.data.url + '" target="_blank">open it</a>';
+          });
+        };
+      });
     });
   }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
 
   document.getElementById('nb-create').onclick = function () {
     var msg = document.getElementById('nb-msg');

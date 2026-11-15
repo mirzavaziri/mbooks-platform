@@ -13,6 +13,7 @@ import bookRoutes from './routes/books.js';
 import adapterRoutes from './routes/adapter.js';
 import assetRoutes from './routes/assets.js';
 import adminRoutes from './routes/admin.js';
+import publishRoutes from './routes/publish.js';
 import { currentUser, roleInBook } from './lib/auth.js';
 import { pool } from './db/pool.js';
 
@@ -31,6 +32,7 @@ await app.register(bookRoutes);
 await app.register(adapterRoutes);
 await app.register(assetRoutes);
 await app.register(adminRoutes);
+await app.register(publishRoutes);
 
 app.get('/healthz', async () => ({ ok: true }));
 

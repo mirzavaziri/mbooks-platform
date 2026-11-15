@@ -30,9 +30,16 @@ services:
       MBOOKS_DATA_DIR: /data
       MBOOKS_STUDIO_DIR: /studio
       MBOOKS_SSO_SECRET: ${MBOOKS_SSO_SECRET}
+      MBOOKS_PUBLISH_DIR: /published
     volumes:
       - mbooks_data:/data
       - ./studio:/studio:ro
+      # The actual nginx static root for published readers (see
+      # nginx/mbooks.conf in the EducationMarket repo, `root
+      # /var/www/mbooks` there, bind-mounted from this same host path) -
+      # a host bind mount, not a named volume, since it's shared with
+      # that other compose project rather than owned by this one.
+      - /home/ubuntu/EducationMarket/mbooks:/published
     networks:
       - default
       - bazar_network
