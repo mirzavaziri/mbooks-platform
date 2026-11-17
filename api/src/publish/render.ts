@@ -132,8 +132,11 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
 
   // The financial-support widget goes on every published book regardless
   // of its own language/direction - this is arith.land's own voice, not
-  // part of the book's running text.
-  bodyParts.push(`<style>${supportStyles()}</style>`, renderSupportWidget(book.slug));
+  // part of the book's running text. Placed right after the table of
+  // contents (unshift, not push): a book can be hundreds of pages long
+  // in one scrolling document, so appending it at the very end meant
+  // almost no reader ever scrolled far enough to see it.
+  bodyParts.unshift(`<style>${supportStyles()}</style>`, renderSupportWidget(book.slug));
 
   const html = renderPage(
     {

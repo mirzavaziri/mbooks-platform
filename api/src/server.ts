@@ -51,11 +51,71 @@ const HTML = 'text/html; charset=utf-8';
 
 app.get('/login', async (_request, reply) => reply.type(HTML).send(loginHtml));
 
-app.get('/', async (request, reply) => {
-  const user = await currentUser(request);
-  if (!user) return reply.redirect('/login');
-  return reply.redirect('/library');
+// The public catalog of every published book - what a plain visit to
+// mbooks.arith.land now shows, replacing the old hardcoded redirect to
+// one specific book (nginx/mbooks.conf in the EducationMarket repo used
+// to `return 302 /counting-in-graphs/` straight from nginx, before this
+// route ever existed to redirect to instead).
+app.get('/', async (_request, reply) => {
+  const { rows } = await pool.query(
+    `select b.slug, b.type, coalesce(bs.data->>'title', b.title) as title, bs.data->>'subtitle' as subtitle
+       from books b
+       join book_settings bs on bs.book_id = b.id
+      where b.visibility = 'public' and b.deleted_at is null
+        and exists (select 1 from published_versions pv where pv.book_id = b.id and pv.status = 'success')
+      order by b.updated_at desc`,
+  );
+
+  const TYPE_LABEL: Record<string, string> = {
+    'textbook-fa': 'کتاب درسی فارسی',
+    'textbook-en': 'English textbook',
+    'fiction-fa': 'داستان فارسی',
+  };
+
+  const cards = rows
+    .map(
+      (b) => `
+    <a class="card" href="/${b.slug}/">
+      <h2>${escapeHtmlPage(b.title)}</h2>
+      ${b.subtitle ? `<p class="subtitle">${escapeHtmlPage(b.subtitle)}</p>` : ''}
+      <span class="type">${TYPE_LABEL[b.type] ?? b.type}</span>
+    </a>`,
+    )
+    .join('\n');
+
+  const html = `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ام‌بوک‌ها</title>
+<style>
+  :root{ color-scheme: light dark; --paper:#f7f8f6; --sheet:#fdfdfb; --ink:#1f2a44; --ink-2:#4a5570; --rule:#d9ddd8; --moss:#2f6b5a; }
+  @media (prefers-color-scheme: dark){ :root{ --paper:#11151d; --sheet:#161b25; --ink:#e3e6ec; --ink-2:#a9b1c2; --rule:#2c3442; --moss:#7fc2ab; } }
+  body{ font-family: Tahoma, "Vazirmatn", sans-serif; background:var(--paper); color:var(--ink); margin:0; padding:2rem 1.2rem; }
+  .wrap{ max-width:46rem; margin:0 auto; }
+  h1{ font-size:1.5rem; margin:0 0 .3rem }
+  .lede{ color:var(--ink-2); margin:0 0 2rem; font-size:.95rem }
+  .grid{ display:grid; gap:1rem; grid-template-columns:repeat(auto-fill, minmax(14rem, 1fr)); }
+  .card{ display:block; background:var(--sheet); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.2rem; text-decoration:none; color:inherit; }
+  .card h2{ font-size:1.1rem; margin:0 0 .3rem }
+  .card .subtitle{ font-size:.85rem; color:var(--ink-2); margin:0 0 .6rem }
+  .card .type{ font-size:.78rem; color:var(--moss); }
+  .empty{ color:var(--ink-2) }
+</style></head><body>
+<div class="wrap">
+  <h1>ام‌بوک‌ها</h1>
+  <p class="lede">کتاب‌هایی از آریث‌لند که برای خواندن آزادند.</p>
+  <div class="grid">${cards || '<p class="empty">هنوز کتابی منتشر نشده است.</p>'}</div>
+</div>
+</body></html>`;
+
+  return reply.type(HTML).send(html);
 });
+
+function escapeHtmlPage(s: string | null): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 app.get('/library', async (request, reply) => {
   const user = await currentUser(request);

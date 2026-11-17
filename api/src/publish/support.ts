@@ -16,7 +16,7 @@ export const SUPPORT_TIERS: SupportTier[] = [
 ];
 
 const SUPPORT_CSS = `
-.support{ margin:3.5rem 0 1rem; padding:1.6rem 1.4rem; border-top:3px double var(--rule); direction:rtl; text-align:right; font-family:"Vazirmatn", Tahoma, sans-serif }
+.support{ margin:0 0 2.5rem; padding:1.4rem; border:1px solid var(--rule); border-radius:8px; background:var(--paper); direction:rtl; text-align:right; font-family:"Vazirmatn", Tahoma, sans-serif }
 .support h2{ border-top:none; margin-top:0; padding-top:0 }
 .support-intro{ max-width:42rem; color:var(--ink-2) }
 .support-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(7.5rem, 1fr)); gap:1rem; margin:1.4rem 0; max-width:40rem }
@@ -52,7 +52,7 @@ export function renderSupportWidget(bookSlug: string): string {
   return `
 <section class="support" id="support">
   <h2>حمایت از این کتاب</h2>
-  <p class="support-intro">اگر خواندن این کتاب برایتان لذت‌بخش و مفید بود، حمایت مالی شما می‌تواند راه ادامه‌ی این مسیر و ساخت محتواهای مشابه را هموارتر کند.</p>
+  <p class="support-intro">نویسنده‌ها برای ادامه‌ی نویسندگی به سه چیز نیاز دارند: خیال، وقت و انگیزه. دوتای اول با خودشان است؛ سومی می‌تواند با حمایت شما امکان‌پذیر شود.</p>
   <div class="support-grid" role="group" aria-label="انتخاب مبلغ حمایت">${tiers}</div>
   <div class="support-custom">
     <label for="support-custom-amount">مبلغ دلخواه (تومان)</label>
