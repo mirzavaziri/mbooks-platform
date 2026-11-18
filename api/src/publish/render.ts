@@ -1,6 +1,6 @@
 import { pool } from '../db/pool.js';
 import type { GlossaryEntry, InlineContext } from './inline.js';
-import { buildNumbering, type BlockRow, type SectionRow } from './numbering.js';
+import { buildNumbering, localDigits, type BlockRow, type SectionRow } from './numbering.js';
 import { renderBlock, type AssetResolver } from './blocks.js';
 import { renderPage, type PageFont } from './page.js';
 import { renderSupportWidget, supportStyles } from './support.js';
@@ -66,7 +66,7 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
     if (g && (g as any).key) glossary.set((g as any).key, g);
   }
 
-  const numbering = buildNumbering(sections, blocksBySection, lang);
+  const numbering = buildNumbering(sections, blocksBySection, lang, settings.digits);
   const warnings: string[] = [];
   const ctx: InlineContext = { numbering, glossary, unresolvedRefs: new Set() };
 
@@ -85,14 +85,14 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
   }
 
   const tocHtml =
-    '<p><strong>Contents</strong></p><ul>' +
+    `<p><strong>${lang === 'fa' ? 'فهرست' : 'Contents'}</strong></p><ul>` +
     chapters
       .map(
         (c) =>
           `<li><a href="#${c.anchor}">${escapeHtml(c.chapter)}</a><ul>` +
           c.sections
             .map((s) => {
-              const label = s.num ? `${s.num} ${s.title}` : s.title;
+              const label = s.num ? `${localDigits(s.num, lang, settings.digits)} ${s.title}` : s.title;
               return `<li><a href="#sec-${s.id}">${escapeHtml(label)}</a></li>`;
             })
             .join('') +
@@ -107,7 +107,7 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
       `<h1 class="unnumbered${chapterGroup.numbered ? ' chapter' : ''}" id="${chapterGroup.anchor}">${escapeHtml(chapterGroup.chapter)}</h1>`,
     );
     for (const section of chapterGroup.sections) {
-      const label = section.num ? `${section.num} ${section.title}` : section.title;
+      const label = section.num ? `${localDigits(section.num, lang, settings.digits)} ${section.title}` : section.title;
       bodyParts.push(`<h2 id="sec-${section.id}">${escapeHtml(label)}</h2>`);
 
       const blocks = (blocksBySection.get(section.id) ?? []).slice().sort((a, b) => a.order - b.order);

@@ -37,6 +37,34 @@ const ENV_TITLE: Record<'en' | 'fa', Record<string, string>> = {
   },
 };
 
+// The studio's own reference prefixes ("@thm-cayley", "@fig-lgv"; see
+// studio.html). Every label is registered both bare and under its
+// prefixed form, so "@fig-x" and "@exm-x" stay distinct even when a
+// figure and an example share the bare label "x".
+export const REF_PREFIX: Record<string, string> = {
+  definition: 'def',
+  theorem: 'thm',
+  lemma: 'lem',
+  proposition: 'prp',
+  corollary: 'cor',
+  principle: 'prn',
+  example: 'exm',
+  remark: 'rem',
+  figure: 'fig',
+  exercise: 'ex',
+};
+
+function register(numbering: Map<string, NumberingEntry>, type: string, label: string, entry: NumberingEntry) {
+  if (!numbering.has(label)) numbering.set(label, entry);
+  numbering.set(`${REF_PREFIX[type]}-${label}`, entry);
+}
+
+const FA_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+export function localDigits(s: string, lang: 'en' | 'fa', digits?: string): string {
+  if (lang !== 'fa' || digits === 'latin') return s;
+  return s.replace(/[0-9]/g, (d) => FA_DIGITS[Number(d)]);
+}
+
 export const EXERCISE_TITLE: Record<'en' | 'fa', string> = { en: 'Exercise', fa: 'تمرین' };
 export const FIGURE_TITLE: Record<'en' | 'fa', string> = { en: 'Figure', fa: 'شکل' };
 
@@ -52,6 +80,7 @@ export function buildNumbering(
   sections: SectionRow[],
   blocksBySection: Map<string, BlockRow[]>,
   lang: 'en' | 'fa',
+  digits?: string,
 ): Map<string, NumberingEntry> {
   const numbering = new Map<string, NumberingEntry>();
   let figureCounter = 0;
@@ -74,21 +103,21 @@ export function buildNumbering(
 
       if (ENV_TYPES.has(block.type)) {
         envCounter += 1;
-        const display = `${ENV_TITLE[lang][block.type]} ${section.num}.${envCounter}`;
+        const display = `${ENV_TITLE[lang][block.type]} ${localDigits(`${section.num}.${envCounter}`, lang, digits)}`;
         const anchorId = `env-${block.id}`;
-        if (label) numbering.set(label, { kind: block.type, display, anchorId });
+        if (label) register(numbering, block.type, label, { kind: block.type, display, anchorId });
         numbering.set(`__block-${block.id}`, { kind: block.type, display, anchorId });
       } else if (block.type === 'exercise') {
         exerciseCounter += 1;
-        const display = `${EXERCISE_TITLE[lang]} ${section.num}.${exerciseCounter}`;
+        const display = `${EXERCISE_TITLE[lang]} ${localDigits(`${section.num}.${exerciseCounter}`, lang, digits)}`;
         const anchorId = `ex-${block.id}`;
-        if (label) numbering.set(label, { kind: 'exercise', display, anchorId });
+        if (label) register(numbering, 'exercise', label, { kind: 'exercise', display, anchorId });
         numbering.set(`__block-${block.id}`, { kind: 'exercise', display, anchorId });
       } else if (block.type === 'figure') {
         figureCounter += 1;
-        const display = `${FIGURE_TITLE[lang]} ${chapterNum}.${figureCounter}`;
+        const display = `${FIGURE_TITLE[lang]} ${localDigits(`${chapterNum}.${figureCounter}`, lang, digits)}`;
         const anchorId = `fig-${block.id}`;
-        if (label) numbering.set(label, { kind: 'figure', display, anchorId });
+        if (label) register(numbering, 'figure', label, { kind: 'figure', display, anchorId });
         numbering.set(`__block-${block.id}`, { kind: 'figure', display, anchorId });
       }
     }

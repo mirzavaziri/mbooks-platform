@@ -61,7 +61,13 @@ export function renderInline(raw: string, ctx: InlineContext): string {
 }
 
 function renderPlainInline(text: string, ctx: InlineContext): string {
-  let out = escapeHtml(text);
+  // `inline code` is pulled out first so nothing inside it (an "@", a "*")
+  // is treated as markup, then restored at the end.
+  const codeSpans: string[] = [];
+  let out = escapeHtml(text).replace(/`([^`\n]+)`/g, (_m, c: string) => {
+    codeSpans.push(`<code>${c}</code>`);
+    return `\u0001${codeSpans.length - 1}\u0001`;
+  });
 
   // [term]{.gls key=some-key} - must run before bold/italic, which would
   // otherwise see the brackets as plain text.
@@ -89,10 +95,12 @@ function renderPlainInline(text: string, ctx: InlineContext): string {
   // a real cross-reference is never preceded by a letter/digit/dot.
   out = out.replace(/(?<![\w.])@([a-zA-Z0-9-]+)/g, (m, refWithPrefix: string) => {
     const bareLabel = refWithPrefix.replace(
-      /^(thm|lem|prp|prop|cor|def|rem|exm|prin|ex|fig)-/,
+      /^(thm|lem|prp|prop|cor|def|rem|exm|prin|prn|ex|fig)-/,
       '',
     );
-    const entry = ctx.numbering.get(bareLabel);
+    // Exact (prefixed) match first: numbering registers "fig-x" and
+    // "exm-x" separately, so a figure and an example may share a bare label.
+    const entry = ctx.numbering.get(refWithPrefix) ?? ctx.numbering.get(bareLabel);
     if (!entry) {
       ctx.unresolvedRefs.add(refWithPrefix);
       return m;
@@ -103,7 +111,7 @@ function renderPlainInline(text: string, ctx: InlineContext): string {
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/(?<![a-zA-Z0-9*])\*([^*]+)\*(?![a-zA-Z0-9*])/g, '<em>$1</em>');
 
-  return out;
+  return out.replace(/\u0001(\d+)\u0001/g, (_m, i) => codeSpans[Number(i)]);
 }
 
 const SEPARATOR_ROW = /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/;

@@ -79,9 +79,12 @@ export function renderBlock(block: { id: string; type: string; fields: any }, de
     case 'proof': {
       const of = f.of as string | undefined;
       const target = of ? ctx.numbering.get(of) : undefined;
+      // fields.heading is the studio's own "Heading (optional)" field, e.g.
+      // «حل» for the solution of an example, or "Second proof".
+      const word = f.heading ? renderInline(f.heading, ctx) : PROOF_WORD[lang];
       const lead = target
-        ? `<em>${PROOF_OF_WORD[lang]} <a href="#${target.anchorId}">${target.display}</a>.</em> `
-        : `<em>${PROOF_WORD[lang]}.</em> `;
+        ? `<em>${f.heading ? word : PROOF_OF_WORD[lang]} <a href="#${target.anchorId}">${target.display}</a>.</em> `
+        : `<em>${word}.</em> `;
       const paragraphs = renderBody(f.body ?? '', ctx);
       return `<div class="proofblock">\n${leadParagraphWith(paragraphs, lead)}\n</div>`;
     }

@@ -1,0 +1,74 @@
+<div class="lab" id="lab-hanoi">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>برج هانوی</h3></div>
+<style>
+#lab-hanoi [hidden]{display:none!important}
+#lab-hanoi .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-hanoi button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-hanoi button.on{background:var(--clay);color:#fff;border-color:var(--clay)}
+#lab-hanoi svg{width:100%;max-width:640px;height:auto;display:block;margin:.6rem auto;touch-action:manipulation}
+#lab-hanoi .peg{cursor:pointer}
+#lab-hanoi .msg{min-height:1.6em;color:var(--clay);font-weight:600}
+#lab-hanoi .cnt{font-variant-numeric:tabular-nums}
+</style>
+<div class="row">
+  <label>تعداد حلقه‌ها: <input type="range" min="1" max="8" value="4" data-k="n"> <b data-k="nv">۴</b></label>
+  <button data-k="play" class="on">خودم بازی می‌کنم</button>
+  <button data-k="demo">نمایش حل</button>
+</div>
+<div class="row" data-k="democtl" hidden>
+  <button data-k="prev">قدم قبل</button>
+  <button data-k="toggle">پخش</button>
+  <button data-k="next">قدم بعد</button>
+  <label>سرعت: <input type="range" min="1" max="10" value="4" data-k="speed"></label>
+</div>
+<svg viewBox="0 0 600 240" data-k="svg" aria-label="سه میله و حلقه‌ها"></svg>
+<div class="row"><span class="cnt" data-k="cnt"></span></div>
+<div class="msg" data-k="msg" aria-live="polite"></div>
+<script>
+(function(){
+  var root=document.getElementById('lab-hanoi'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var COLORS=['#c0392b','#d35400','#d4a017','#27ae60','#16a085','#2980b9','#8e44ad','#7f5539'];
+  var n=4, pegs, moves=0, sel=null, mode='play', plan=[], step=0, timer=null, lastMoved=null;
+  function reset(){ pegs=[[],[],[]]; for(var i=n;i>=1;i--) pegs[0].push(i); moves=0; sel=null; lastMoved=null; $('msg').textContent='';
+    plan=[]; (function solve(k,a,b,c){ if(!k) return; solve(k-1,a,c,b); plan.push([a,c,k]); solve(k-1,b,a,c); })(n,0,1,2); step=0; stop(); draw(); }
+  function draw(){
+    var s='', W=600, base=215, ph=170, w0=34, w1=180;
+    for(var p=0;p<3;p++){ var x=100+p*200;
+      s+='<g class="peg" data-p="'+p+'"><rect x="'+(x-90)+'" y="20" width="180" height="210" fill="transparent"/>';
+      s+='<rect x="'+(x-4)+'" y="'+(base-ph)+'" width="8" height="'+ph+'" rx="3" fill="'+(sel===p?'var(--clay)':'#8a8378')+'"/></g>'; }
+    s+='<rect x="10" y="'+base+'" width="580" height="8" rx="3" fill="#8a8378"/>';
+    var big = mode==='demo' && step<plan.length ? plan[step][2] : null;
+    for(var p2=0;p2<3;p2++){ var x2=100+p2*200;
+      pegs[p2].forEach(function(d,i){ var w=w0+(w1-w0)*(d-1)/Math.max(1,7); var y=base-(i+1)*19;
+        var hl=(mode==='demo' && d===lastMoved);
+        s+='<rect pointer-events="none" x="'+(x2-w/2)+'" y="'+y+'" width="'+w+'" height="17" rx="7" fill="'+COLORS[d-1]+'" stroke="'+(hl?'#111':'none')+'" stroke-width="'+(hl?3:0)+'"/>'; }); }
+    $('svg').innerHTML=s;
+    $('cnt').textContent='تعداد حرکت‌ها: '+fa(mode==='demo'?step:moves)+'   ·   کمترین تعداد: 2^n−1 = '+fa(Math.pow(2,n)-1);
+  }
+  function move(a,c){ var d=pegs[a].pop(); pegs[c].push(d); lastMoved=d; }
+  $('svg').addEventListener('click',function(e){
+    if(mode!=='play') return; var g=e.target.closest('.peg'); if(!g) return; var p=+g.getAttribute('data-p');
+    if(sel===null){ if(pegs[p].length){ sel=p; $('msg').textContent=''; } }
+    else if(sel===p){ sel=null; }
+    else { var top=pegs[sel][pegs[sel].length-1], dst=pegs[p][pegs[p].length-1];
+      if(dst!==undefined && dst<top){ $('msg').textContent='حلقه‌ی بزرگ روی کوچک نمی‌رود.'; sel=null; }
+      else { move(sel,p); moves++; sel=null;
+        if(pegs[2].length===n) $('msg').textContent='با '+fa(moves)+' حرکت حل کردی؛ کمترین تعداد '+fa(Math.pow(2,n)-1)+' است.'; } }
+    draw(); });
+  function goto(k){ pegs=[[],[],[]]; for(var i=n;i>=1;i--) pegs[0].push(i); lastMoved=null; for(var j=0;j<k;j++) move(plan[j][0],plan[j][1]); step=k; draw();
+    if(step===plan.length){ $('msg').textContent='حل شد: '+fa(plan.length)+' حرکت. ساختار بازگشتی: '+fa(n-1)+' حلقه کنار، بزرگ‌ترین حلقه جابه‌جا، '+fa(n-1)+' حلقه رویش.'; stop(); } else $('msg').textContent=''; }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } $('toggle').textContent='پخش'; }
+  $('toggle').onclick=function(){ if(timer){ stop(); return; } if(step>=plan.length) goto(0);
+    $('toggle').textContent='توقف'; timer=setInterval(function(){ if(step<plan.length) goto(step+1); else stop(); }, 1100-100*$('speed').value); };
+  $('speed').oninput=function(){ if(timer){ stop(); $('toggle').click(); } };
+  $('next').onclick=function(){ stop(); if(step<plan.length) goto(step+1); };
+  $('prev').onclick=function(){ stop(); if(step>0) goto(step-1); };
+  function setMode(m){ mode=m; $('play').classList.toggle('on',m==='play'); $('demo').classList.toggle('on',m==='demo'); $('democtl').hidden=(m!=='demo'); reset(); }
+  $('play').onclick=function(){ setMode('play'); }; $('demo').onclick=function(){ setMode('demo'); };
+  $('n').oninput=function(){ n=+this.value; $('nv').textContent=fa(n); reset(); };
+  reset();
+})();
+</script>
+</div>

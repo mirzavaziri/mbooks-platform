@@ -74,6 +74,17 @@ docker run --rm --network mbooks-platform_default \
   [--fonts /pkg/current/fonts] [--covers /pkg/current/covers]
 ```
 
+Import a book written in the author-guide Markdown convention
+(`docs/author-guide.md`; the source of each such book, with its figures and
+hand-built lab widgets, lives under `content/<slug>/`):
+
+```
+node dist/convert-author-md.js --in content/<slug>/<book>.md --out /tmp/export \
+  --title "..." [--subtitle "..."] [--authors "A;B"] --labs content/<slug>/labs
+node dist/import-book.js --slug <slug> --type textbook-fa --data /tmp/export \
+  --owner-email you@example.com --assets content/<slug>/figures
+```
+
 ## Production
 
 Runs on the Germany dev server (not Arvan — see the architecture decision

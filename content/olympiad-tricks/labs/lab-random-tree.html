@@ -1,0 +1,67 @@
+<div class="lab" id="lab-random-tree">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>درخت تصادفی</h3></div>
+<style>
+#lab-random-tree [hidden]{display:none!important}
+#lab-random-tree .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-random-tree button{font:inherit;padding:.25rem .8rem;border:1px solid var(--clay);border-radius:4px;background:var(--clay);color:#fff;cursor:pointer}
+#lab-random-tree svg{width:100%;max-width:560px;height:auto;display:block;margin:.6rem auto;background:var(--paper,#fff);border:1px solid var(--rule);border-radius:4px}
+#lab-random-tree .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.3rem 1rem;font-variant-numeric:tabular-nums}
+#lab-random-tree .seq{direction:ltr;font-family:ui-monospace,monospace;unicode-bidi:isolate}
+#lab-random-tree .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--sheet,#fff);padding:.1rem .45rem;border-radius:3px;font-size:.85rem}
+</style>
+<div class="row">
+  <label>تعداد رأس‌ها <i>n</i>: <input type="number" min="2" max="30" value="10" data-k="n" style="width:4.5em"></label>
+  <button data-k="go">درخت تازه</button>
+</div>
+<div style="position:relative"><svg viewBox="0 0 560 400" data-k="svg" aria-label="درخت تصادفی"></svg><span class="tip" data-k="tip" hidden></span></div>
+<div class="stats">
+  <div>تعداد یال‌ها: <b data-k="e"></b></div>
+  <div>تعداد برگ‌ها: <b data-k="l"></b></div>
+  <div>دنباله‌ی پروفر: <span class="seq" data-k="seq"></span></div>
+  <div>تعداد کل درخت‌های برچسب‌دار با <i>n</i> رأس: <b data-k="tot"></b></div>
+</div>
+<script>
+(function(){
+  var root=document.getElementById('lab-random-tree'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var anim=null;
+  function pruferToEdges(seq,n){ var deg=new Array(n+1).fill(1); seq.forEach(function(v){deg[v]++;}); var edges=[];
+    seq.forEach(function(v){ for(var u=1;u<=n;u++) if(deg[u]===1){ edges.push([u,v]); deg[u]--; deg[v]--; break; } });
+    var rest=[]; for(var u=1;u<=n;u++) if(deg[u]===1) rest.push(u); edges.push(rest); return edges; }
+  function big(n){ if(n<3) return '1'; var r=BigInt(n)**BigInt(n-2); return r.toString(); }
+  function make(){
+    var n=Math.max(2,Math.min(30,parseInt($('n').value,10)||2)); $('n').value=n;
+    var seq=[]; for(var i=0;i<n-2;i++) seq.push(1+Math.floor(Math.random()*n));
+    var edges=pruferToEdges(seq,n), deg=new Array(n+1).fill(0); edges.forEach(function(e){deg[e[0]]++;deg[e[1]]++;});
+    var leaves=0; for(var v=1;v<=n;v++) if(deg[v]===1) leaves++;
+    $('e').textContent=fa(edges.length); $('l').textContent=fa(leaves); $('seq').textContent=seq.length?'('+seq.join(', ')+')':'(تهی)';
+    $('tot').textContent=fa(n)+'^'+fa(n-2)+' = '+fa(big(n));
+    layout(n,edges,deg);
+  }
+  function layout(n,edges,deg){
+    if(anim) cancelAnimationFrame(anim);
+    var W=560,H=400,P=[],i;
+    for(i=0;i<=n;i++) P.push({x:W/2+Math.cos(i*2.4)*120*Math.random()+ (Math.random()-.5)*40,y:H/2+Math.sin(i*2.4)*120*Math.random(),vx:0,vy:0});
+    var svg=$('svg'), iter=0, L=Math.max(28,Math.min(60,300/Math.sqrt(n)));
+    function tick(){
+      for(var a=1;a<=n;a++){ var fx=0,fy=0;
+        for(var b=1;b<=n;b++){ if(a===b) continue; var dx=P[a].x-P[b].x, dy=P[a].y-P[b].y, d2=dx*dx+dy*dy+.01; fx+=dx*1800/d2; fy+=dy*1800/d2; }
+        fx+=(W/2-P[a].x)*.01; fy+=(H/2-P[a].y)*.01; P[a].vx=(P[a].vx+fx)*.5; P[a].vy=(P[a].vy+fy)*.5; }
+      edges.forEach(function(e){ var A=P[e[0]],B=P[e[1]],dx=B.x-A.x,dy=B.y-A.y,d=Math.sqrt(dx*dx+dy*dy)||1,f=(d-L)*.08; A.vx+=dx/d*f;A.vy+=dy/d*f;B.vx-=dx/d*f;B.vy-=dy/d*f; });
+      for(var c=1;c<=n;c++){ P[c].x=Math.max(16,Math.min(W-16,P[c].x+Math.max(-8,Math.min(8,P[c].vx)))); P[c].y=Math.max(16,Math.min(H-16,P[c].y+Math.max(-8,Math.min(8,P[c].vy)))); }
+      var s=''; edges.forEach(function(e){ s+='<line x1="'+P[e[0]].x+'" y1="'+P[e[0]].y+'" x2="'+P[e[1]].x+'" y2="'+P[e[1]].y+'" stroke="#8a8378" stroke-width="2"/>'; });
+      for(var v=1;v<=n;v++){ s+='<g data-v="'+v+'" data-d="'+deg[v]+'"><circle cx="'+P[v].x+'" cy="'+P[v].y+'" r="12" fill="'+(deg[v]===1?'#c0792b':'#2f6f5e')+'"/><text x="'+P[v].x+'" y="'+(P[v].y+4)+'" text-anchor="middle" font-size="11" fill="#fff" style="font-family:sans-serif;pointer-events:none">'+v+'</text></g>'; }
+      svg.innerHTML=s; if(++iter<450) anim=requestAnimationFrame(tick);
+    }
+    tick();
+  }
+  $('svg').addEventListener('mousemove',function(e){ var g=e.target.closest('g[data-v]'), tip=$('tip');
+    if(!g){ tip.hidden=true; return; } var r=root.querySelector('[data-k="svg"]').parentNode.getBoundingClientRect();
+    tip.textContent='رأس '+fa(g.getAttribute('data-v'))+' · درجه '+fa(g.getAttribute('data-d')); tip.style.left=(e.clientX-r.left+12)+'px'; tip.style.top=(e.clientY-r.top+12)+'px'; tip.hidden=false; });
+  $('svg').addEventListener('mouseleave',function(){ $('tip').hidden=true; });
+  $('go').onclick=make; $('n').onchange=make;
+  make();
+})();
+</script>
+</div>

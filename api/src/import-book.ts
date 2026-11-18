@@ -6,6 +6,7 @@
 //   node dist/import-book.js --slug shomordaniha --type textbook-fa \
 //     --data /path/to/data/shomordaniha --owner-email you@example.com \
 //     [--fonts /path/to/current/fonts] [--covers /path/to/current/covers]
+//     [--assets /path/to/figures]   (images referenced as local:<basename>)
 import { randomUUID } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { extname, join } from 'node:path';
@@ -71,12 +72,14 @@ function guessContentType(path: string): string {
   if (path.endsWith('.woff2')) return 'font/woff2';
   if (path.endsWith('.jpg') || path.endsWith('.jpeg')) return 'image/jpeg';
   if (path.endsWith('.png')) return 'image/png';
+  if (path.endsWith('.svg')) return 'image/svg+xml';
+  if (path.endsWith('.webp')) return 'image/webp';
   return 'application/octet-stream';
 }
 
 async function main() {
   const args = parseArgs();
-  const { slug, type, data: dataDir, 'owner-email': ownerEmail, fonts: fontsDir, covers: coversDir } = args;
+  const { slug, type, data: dataDir, 'owner-email': ownerEmail, fonts: fontsDir, covers: coversDir, assets: assetsDir } = args;
   if (!slug || !type || !dataDir || !ownerEmail) {
     console.error(
       'usage: import-book.js --slug <slug> --type <textbook-fa|textbook-en|fiction-fa> --data <export dir> --owner-email <email> [--fonts <dir>] [--covers <dir>]',
@@ -147,6 +150,16 @@ async function main() {
     await pool.query('update books set title = $1 where id = $2', [settings.title, bookId]);
   }
 
+  // ---- block images (figures etc.), resolved at publish time by basename ----
+  const importedAssetBases = new Set<string>();
+  if (assetsDir && existsSync(assetsDir)) {
+    for (const file of readdirSync(assetsDir)) {
+      if (!/\.(png|jpe?g|svg|webp)$/i.test(file)) continue;
+      await importAsset(bookId, join(assetsDir, file), ownerId);
+      importedAssetBases.add(file.replace(/\.[a-zA-Z0-9]+$/, '').toLowerCase());
+    }
+  }
+
   // ---- sections ----
   const sectionsDir = join(dataDir, 'sections');
   let sectionCount = 0;
@@ -179,7 +192,11 @@ async function main() {
       const d = JSON.parse(readFileSync(join(blocksDir, file), 'utf8'));
 
       const image = d.fields?.image;
-      if (image && !String(image).startsWith('local:')) {
+      if (image && String(image).startsWith('local:') && assetsDir) {
+        if (!importedAssetBases.has(String(image).slice('local:'.length).toLowerCase())) {
+          blockAssetIssues.push(`block ${id} (${d.type}): ${image} not found in ${assetsDir}`);
+        }
+      } else if (image && !String(image).startsWith('local:')) {
         blockAssetIssues.push(`block ${id} (${d.type}, section ${d.section}): fields.image asset ${image} not in handoff package`);
       }
       if (d.voice?.asset) {

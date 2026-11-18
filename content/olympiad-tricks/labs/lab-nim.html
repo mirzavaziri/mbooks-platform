@@ -1,0 +1,77 @@
+<div class="lab" id="lab-nim">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>بازی نیم با رایانه</h3></div>
+<style>
+#lab-nim [hidden]{display:none!important}
+#lab-nim .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-nim button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-nim button.main{background:var(--clay);color:#fff;border-color:var(--clay)}
+#lab-nim .heaps{display:flex;justify-content:center;gap:1.4rem;align-items:flex-end;min-height:16rem;margin:.8rem 0;padding:.5rem;border-bottom:3px solid #8a8378}
+#lab-nim .heap{display:flex;flex-direction:column-reverse;align-items:center;gap:3px;padding:4px;border-radius:8px;transition:background .2s}
+#lab-nim .heap.flash{background:rgba(192,57,43,.18)}
+#lab-nim .chip{width:24px;height:12px;border-radius:50%;border:none;padding:0;cursor:pointer}
+#lab-nim .heap .lbl{font-size:.85rem;margin-top:.2rem}
+#lab-nim .sizes input{width:3.4em}
+#lab-nim table{direction:ltr;margin:.5rem auto;border-collapse:collapse;font-family:ui-monospace,monospace}
+#lab-nim td,#lab-nim th{padding:.1rem .55rem;text-align:center;border-bottom:1px solid var(--rule)}
+#lab-nim td.odd{color:#c0392b;font-weight:700}
+#lab-nim .msg{min-height:1.6em;font-weight:600;color:var(--clay)}
+</style>
+<div class="row">
+  <label>تعداد کپه‌ها: <select data-k="k"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+  <span class="sizes" data-k="sizes"></span>
+</div>
+<div class="row">
+  <label>شروع‌کننده: <select data-k="first"><option value="u">من</option><option value="c">رایانه</option></select></label>
+  <button class="main" data-k="start">شروع بازی</button>
+  <label><input type="checkbox" data-k="bin"> نشان دادن مبنای ۲</label>
+</div>
+<div class="heaps" data-k="heaps"></div>
+<div data-k="tbl" hidden></div>
+<div class="msg" data-k="msg" aria-live="polite"></div>
+<script>
+(function(){
+  var root=document.getElementById('lab-nim'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var COLORS=['#c0392b','#2980b9','#27ae60','#8e44ad','#d4a017'];
+  var heaps=[3,4,5], turn='u', over=true, busy=false;
+  function sizeInputs(){ var k=+$('k').value, def=[3,4,5,7,9], s='';
+    for(var i=0;i<k;i++) s+='<label>کپه‌ی '+fa(i+1)+': <input type="number" min="1" max="15" value="'+def[i]+'"></label> ';
+    $('sizes').innerHTML=s; }
+  function xor(){ return heaps.reduce(function(a,b){return a^b;},0); }
+  function draw(flash){
+    var s=''; heaps.forEach(function(h,i){ s+='<div class="heap'+(flash===i?' flash':'')+'" data-h="'+i+'"><span class="lbl">'+fa(h)+'</span>';
+      for(var j=0;j<h;j++) s+='<button class="chip" data-h="'+i+'" data-j="'+j+'" style="background:'+COLORS[i]+'" aria-label="کپه‌ی '+fa(i+1)+'، مهره‌ی '+fa(j+1)+'"></button>';
+      s+='</div>'; });
+    $('heaps').innerHTML=s; table(); }
+  function table(){
+    var show=$('bin').checked; $('tbl').hidden=!show; if(!show) return;
+    var bits=Math.max(1,Math.max.apply(null,heaps.concat([1])).toString(2).length), x=xor();
+    var t='<table><tr><th></th>'; for(var b=bits-1;b>=0;b--) t+='<th>'+(1<<b)+'</th>'; t+='</tr>';
+    heaps.forEach(function(h,i){ t+='<tr><th>'+h+'</th>'; for(var b=bits-1;b>=0;b--) t+='<td>'+((h>>b)&1)+'</td>'; t+='</tr>'; });
+    t+='<tr><th>⊕</th>'; for(var b2=bits-1;b2>=0;b2--){ var v=(x>>b2)&1; t+='<td class="'+(v?'odd':'')+'">'+v+'</td>'; } t+='</tr></table>';
+    $('tbl').innerHTML=t; }
+  function done(){ return heaps.every(function(h){return h===0;}); }
+  function finish(winner){ over=true; $('msg').textContent= winner==='u' ? 'برنده شدی!' : 'رایانه برد؛ دوباره امتحان کن.'; }
+  function computer(){
+    busy=true; $('msg').textContent='نوبت رایانه…';
+    var x=xor(), hi=-1, to=0;
+    if(x){ for(var i=0;i<heaps.length;i++) if((heaps[i]^x)<heaps[i]){ hi=i; to=heaps[i]^x; break; } }
+    else { var nz=heaps.map(function(h,i){return h?i:-1;}).filter(function(i){return i>=0;}); hi=nz[Math.floor(Math.random()*nz.length)]; to=heaps[hi]-1-Math.floor(Math.random()*Math.min(2,heaps[hi])); if(to<0) to=0; }
+    draw(hi);
+    setTimeout(function(){ heaps[hi]=to; draw(); busy=false;
+      if(done()) finish('c'); else { turn='u'; $('msg').textContent='نوبت شماست: روی یک مهره کلیک کنید.'; } }, 900);
+  }
+  $('heaps').addEventListener('click',function(e){
+    var c=e.target.closest('.chip'); if(!c||over||busy||turn!=='u') return;
+    heaps[+c.getAttribute('data-h')]=+c.getAttribute('data-j'); draw();
+    if(done()) finish('u'); else { turn='c'; computer(); } });
+  $('start').onclick=function(){
+    heaps=[].map.call($('sizes').querySelectorAll('input'),function(inp){ var v=Math.max(1,Math.min(15,parseInt(inp.value,10)||1)); inp.value=v; return v; });
+    over=false; draw(); turn=$('first').value;
+    if(turn==='c') computer(); else $('msg').textContent='نوبت شماست: روی یک مهره کلیک کنید؛ آن مهره و همه‌ی مهره‌های بالای آن برداشته می‌شوند.'; };
+  $('k').onchange=sizeInputs; $('bin').onchange=table;
+  sizeInputs(); draw();
+})();
+</script>
+</div>
