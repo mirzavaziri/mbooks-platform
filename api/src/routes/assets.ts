@@ -79,22 +79,32 @@ export default async function assetRoutes(app: FastifyInstance) {
   // are referenced by bare asset id throughout the studio), so look it up
   // and check membership from the asset row itself.
   app.get<{ Params: { assetId: string } }>('/_blob/:assetId', { compress: false }, async (request, reply) => {
-    const user = await requireUser(request, reply);
-    if (!user) return;
-
     const { rows } = await pool.query(
-      'select book_id, storage_path, content_type, filename from assets where id = $1 and deleted_at is null',
+      `select a.book_id, a.storage_path, a.content_type, a.filename, b.visibility
+         from assets a join books b on b.id = a.book_id
+        where a.id = $1 and a.deleted_at is null and b.deleted_at is null`,
       [request.params.assetId],
     );
     const asset = rows[0];
     if (!asset) return reply.code(404).send({ error: 'not_found' });
 
-    const role = await roleInBook(user.id, asset.book_id);
-    if (!role) return reply.code(404).send({ error: 'not_found' });
+    // A public book's published page is read by anonymous visitors, so its
+    // figures and fonts must load without a session too; every other
+    // book's assets stay members-only.
+    const isPublic = asset.visibility === 'public';
+    if (!isPublic) {
+      const user = await requireUser(request, reply);
+      if (!user) return;
+      const role = await roleInBook(user.id, asset.book_id);
+      if (!role) return reply.code(404).send({ error: 'not_found' });
+    }
 
     if (!existsSync(asset.storage_path)) return reply.code(404).send({ error: 'file_missing' });
 
-    reply.header('cache-control', 'private, max-age=31536000, immutable');
+    // An SVG opened directly is a document that could run script on this
+    // origin; never let it.
+    if (asset.content_type === 'image/svg+xml') reply.header('content-security-policy', "script-src 'none'");
+    reply.header('cache-control', `${isPublic ? 'public' : 'private'}, max-age=31536000, immutable`);
     return reply.type(asset.content_type || 'application/octet-stream').send(createReadStream(asset.storage_path));
   });
 }
