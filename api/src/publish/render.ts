@@ -3,7 +3,6 @@ import type { GlossaryEntry, InlineContext } from './inline.js';
 import { buildNumbering, localDigits, type BlockRow, type SectionRow } from './numbering.js';
 import { renderBlock, type AssetResolver } from './blocks.js';
 import { renderPage, type PageFont } from './page.js';
-import { renderSupportWidget, supportStyles } from './support.js';
 
 export type PublishResult = { html: string; warnings: string[] };
 
@@ -130,13 +129,10 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
     else warnings.push(`font asset not found: ${f.asset}`);
   }
 
-  // The financial-support widget goes on every published book regardless
-  // of its own language/direction - this is arith.land's own voice, not
-  // part of the book's running text. Placed right after the table of
-  // contents (unshift, not push): a book can be hundreds of pages long
-  // in one scrolling document, so appending it at the very end meant
-  // almost no reader ever scrolled far enough to see it.
-  bodyParts.unshift(`<style>${supportStyles()}</style>`, renderSupportWidget(book.slug));
+  // The financial-support widget (publish/support.ts) is switched off for
+  // now, pending a final decision on it; to bring it back, unshift
+  // `<style>${supportStyles()}</style>` and renderSupportWidget(book.slug)
+  // onto bodyParts right after the table of contents.
 
   const html = renderPage(
     {
