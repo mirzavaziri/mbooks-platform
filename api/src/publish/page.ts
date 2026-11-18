@@ -49,6 +49,7 @@ a:hover{ text-decoration-thickness:2px }
 :focus-visible{ outline:2px solid var(--moss); outline-offset:2px; border-radius:2px }
 
 #title-block-header{ border-bottom:1px solid var(--rule); padding-bottom:1.4rem; margin-bottom:2rem; display:grid; gap:.25rem }
+#title-block-header .affiliation{ margin:.1rem 0 0; color:var(--ink-2); font-size:.9rem }
 #title-block-header .subtitle{ order:-1; margin:0; font-family:var(--f-label); letter-spacing:.06em; color:var(--moss); font-size:1rem }
 #title-block-header .title{ margin:0; font-size:clamp(2.2rem, 5vw, 3.3rem); line-height:1.05; font-weight:600; letter-spacing:-.01em; text-wrap:balance }
 #title-block-header .author{ margin:0; color:var(--ink-2); font-style:italic; display:inline }
@@ -193,6 +194,7 @@ ${googleFonts}
 <h1 class="title">${escapeHtml(meta.title)}</h1>
 ${meta.subtitle ? `<p class="subtitle">${escapeHtml(meta.subtitle)}</p>` : ''}
 ${authorsHtml}
+${meta.affiliation ? `<p class="affiliation">${escapeHtml(meta.affiliation)}</p>` : ''}
 </header>
 <div class="contents" id="contents">${tocHtml}</div>
 ${bodyHtml}

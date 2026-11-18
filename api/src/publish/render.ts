@@ -90,6 +90,7 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
         (c) =>
           `<li><a href="#${c.anchor}">${escapeHtml(c.chapter)}</a><ul>` +
           c.sections
+            .filter((s) => s.num || s.title !== c.chapter)
             .map((s) => {
               const label = s.num ? `${localDigits(s.num, lang, settings.digits)} ${s.title}` : s.title;
               return `<li><a href="#sec-${s.id}">${escapeHtml(label)}</a></li>`;
@@ -107,7 +108,11 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
     );
     for (const section of chapterGroup.sections) {
       const label = section.num ? `${localDigits(section.num, lang, settings.digits)} ${section.title}` : section.title;
-      bodyParts.push(`<h2 id="sec-${section.id}">${escapeHtml(label)}</h2>`);
+      // An unnumbered section that merely repeats its chapter's name (a
+      // chapter like «مقدمه» with no sections of its own) gets only an
+      // anchor, not a second identical heading.
+      if (!section.num && section.title === chapterGroup.chapter) bodyParts.push(`<span id="sec-${section.id}"></span>`);
+      else bodyParts.push(`<h2 id="sec-${section.id}">${escapeHtml(label)}</h2>`);
 
       const blocks = (blocksBySection.get(section.id) ?? []).slice().sort((a, b) => a.order - b.order);
       for (const block of blocks) {
@@ -141,6 +146,7 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
       title: settings.title ?? book.title,
       subtitle: settings.subtitle,
       authors: settings.authors ?? [],
+      affiliation: settings.affiliation,
       fonts,
       bodyFont: settings.bodyFont,
       headingFont: settings.headingFont,

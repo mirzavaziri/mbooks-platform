@@ -1,0 +1,42 @@
+<div class="lab" id="lab-dice">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>پرتاب دو تاس</h3></div>
+<style>
+#lab-dice [hidden]{display:none!important}
+#lab-dice .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-dice button{font:inherit;padding:.25rem .8rem;border:1px solid var(--clay);border-radius:4px;background:var(--clay);color:#fff;cursor:pointer}
+#lab-dice svg{width:100%;max-width:640px;height:auto;display:block;margin:.6rem auto;direction:ltr}
+#lab-dice .legend{font-size:.88rem;color:var(--ink-2)}
+</style>
+<div class="row">
+  <label>تعداد پرتاب‌ها: <select data-k="n"><option>10</option><option selected>100</option><option>1000</option><option>10000</option></select></label>
+  <label>تعداد تاس‌ها: <select data-k="d"><option>1</option><option selected>2</option><option>3</option></select></label>
+  <button data-k="go">بینداز</button>
+</div>
+<svg viewBox="0 0 640 300" data-k="svg" role="img" aria-label="نمودار ستونی فراوانی مجموع تاس‌ها"></svg>
+<p class="legend">ستون‌ها: تعداد دفعاتی که هر مجموع آمده است. خط‌چین: تعداد مورد انتظار از روی جدول حالت‌ها.</p>
+<script>
+(function(){
+  var root=document.getElementById('lab-dice'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  function ways(d){ var w=[1]; for(var i=0;i<d;i++){ var nw=new Array(w.length+6).fill(0); w.forEach(function(c,s){ for(var f=1;f<=6;f++) nw[s+f]+=c; }); w=nw; } return w; }
+  function run(){
+    var n=+$('n').value, d=+$('d').value, lo=d, hi=6*d, cnt={}, s, i, j;
+    for(s=lo;s<=hi;s++) cnt[s]=0;
+    for(i=0;i<n;i++){ s=0; for(j=0;j<d;j++) s+=1+Math.floor(Math.random()*6); cnt[s]++; }
+    var w=ways(d), tot=Math.pow(6,d), exp={}, mx=0;
+    for(s=lo;s<=hi;s++){ exp[s]=n*w[s]/tot; mx=Math.max(mx,cnt[s],exp[s]); }
+    var W=640,H=300,L=48,R=10,T=14,B=40, k=hi-lo+1, bw=(W-L-R)/k, sy=function(v){ return H-B-(H-B-T)*v/(mx*1.08||1); };
+    var g='<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#8a8378"/><line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'" stroke="#8a8378"/>';
+    for(var t=0;t<=4;t++){ var v=Math.round(mx*1.08*t/4), y=sy(v); g+='<text x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="currentColor" opacity=".7">'+v+'</text><line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="#8a8378" opacity=".15"/>'; }
+    for(s=lo;s<=hi;s++){ var x=L+(s-lo)*bw, y2=sy(cnt[s]);
+      g+='<rect x="'+(x+bw*.15)+'" y="'+y2+'" width="'+(bw*.7)+'" height="'+(H-B-y2)+'" fill="#2f6f5e"><title>'+s+': '+cnt[s]+'</title></rect>';
+      g+='<line x1="'+(x+bw*.08)+'" x2="'+(x+bw*.92)+'" y1="'+sy(exp[s])+'" y2="'+sy(exp[s])+'" stroke="#c0392b" stroke-width="2" stroke-dasharray="4 3"/>';
+      if(k<=16||s%2===lo%2) g+='<text x="'+(x+bw/2)+'" y="'+(H-B+15)+'" text-anchor="middle" font-size="11" fill="currentColor">'+s+'</text>'; }
+    g+='<text x="'+((W+L)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12" fill="currentColor">مجموع</text>';
+    g+='<text x="12" y="'+((H-B+T)/2)+'" text-anchor="middle" font-size="12" fill="currentColor" transform="rotate(-90 12 '+((H-B+T)/2)+')">تعداد دفعات</text>';
+    $('svg').innerHTML=g;
+  }
+  $('go').onclick=run; $('n').onchange=run; $('d').onchange=run; run();
+})();
+</script>
+</div>

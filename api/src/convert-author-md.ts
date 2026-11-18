@@ -98,6 +98,9 @@ function main() {
 
   // Drop HTML comments (uploader notes) - but not inside code fences, which
   // never contain "<!--" in practice; keep it simple.
+  // "<!-- یادداشت-بخش: ... -->" survives as a marker line and becomes part
+  // of the current section's studio notes ("Notes between the authors").
+  src = src.replace(/<!--\s*یادداشت-بخش:\s*([\s\S]*?)\s*-->/g, (_m, note: string) => `\u0002NOTE ${note.replace(/\n/g, ' ')}`);
   src = src.replace(/<!--[\s\S]*?-->/g, '');
   const lines = src.split('\n');
 
@@ -128,6 +131,12 @@ function main() {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const t = line.trim();
+
+    if (t.startsWith('\u0002NOTE ')) {
+      if (section) section.notes = (section.notes ? section.notes + '\n' : '') + t.slice(6).trim();
+      else warnings.push(`note outside any section dropped: ${t.slice(6)}`);
+      continue;
+    }
 
     if (inGlossary) {
       const m = /^-\s+\*\*(.+?)\*\*\s*:\s*(.+?)(?:\s+—\s+(https?:\S+))?\s*$/.exec(t);
@@ -423,6 +432,7 @@ function main() {
     title: args.title ?? '',
     subtitle: args.subtitle ?? '',
     authors: (args.authors ?? '').split(';').map((s) => s.trim()).filter(Boolean),
+    ...(args.affiliation ? { affiliation: args.affiliation } : {}),
     lang: 'fa',
     direction: 'rtl',
     glossary,

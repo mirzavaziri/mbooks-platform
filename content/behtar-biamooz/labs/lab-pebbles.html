@@ -1,0 +1,58 @@
+<div class="lab" id="lab-pebbles">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>بازی سنگریزه‌ها در برابر رایانه</h3></div>
+<style>
+#lab-pebbles [hidden]{display:none!important}
+#lab-pebbles .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-pebbles button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-pebbles button.main{background:var(--clay);color:#fff;border-color:var(--clay)}
+#lab-pebbles button:disabled{opacity:.45;cursor:default}
+#lab-pebbles input[type=number]{width:4em}
+#lab-pebbles .stones{display:flex;flex-wrap:wrap;gap:6px;margin:.8rem 0;direction:rtl}
+#lab-pebbles .st{width:18px;height:18px;border-radius:50%;background:#7f6a52;transition:opacity .35s,background .35s}
+#lab-pebbles .st.gone{opacity:.15}
+#lab-pebbles .st.last{background:var(--clay)}
+#lab-pebbles .msg{min-height:1.6em;font-weight:600;color:var(--clay)}
+#lab-pebbles .lose{margin-top:.4rem}
+</style>
+<div class="row">
+  <label>تعداد سنگریزه‌ها: <input type="number" min="5" max="50" value="23" data-k="n"></label>
+  <label>بیشترین برداشت در هر نوبت: <input type="number" min="2" max="6" value="4" data-k="k"></label>
+  <label>من نفر <select data-k="first"><option value="u">اول</option><option value="c">دوم</option></select> هستم</label>
+  <button class="main" data-k="start">شروع بازی</button>
+</div>
+<div class="stones" data-k="stones" aria-hidden="true"></div>
+<div class="row"><span>باقی‌مانده: <b data-k="left"></b></span><span data-k="turn"></span></div>
+<div class="row" data-k="moves"></div>
+<div class="msg" data-k="msg" aria-live="polite"></div>
+<button data-k="showlose" hidden>موقعیت‌های باخت را نشانم بده</button>
+<div class="lose" data-k="lose" hidden></div>
+<script>
+(function(){
+  var root=document.getElementById('lab-pebbles'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var N=23,K=4,left=23,over=true,busy=false,justTaken=[];
+  function clamp(el,lo,hi){ var v=Math.max(lo,Math.min(hi,parseInt(el.value,10)||lo)); el.value=v; return v; }
+  function draw(){
+    var s=''; for(var i=0;i<N;i++){ var gone=i>=left; s+='<span class="st'+(gone?' gone':'')+(justTaken.indexOf(i)>=0?' last':'')+'"></span>'; }
+    $('stones').innerHTML=s; $('left').textContent=fa(left);
+    var m=''; for(var t=1;t<=K;t++) m+='<button data-t="'+t+'"'+(over||busy||t>left?' disabled':'')+'>برداشتن '+fa(t)+'</button>';
+    $('moves').innerHTML=m;
+  }
+  function take(t,who){ justTaken=[]; for(var i=left-t;i<left;i++) justTaken.push(i); left-=t; draw();
+    if(left===0){ over=true; $('turn').textContent=''; $('msg').textContent= who==='u'?'آخرین سنگریزه را شما برداشتید؛ برنده شدید!':'آخرین سنگریزه را رایانه برداشت؛ رایانه برد.'; $('showlose').hidden=false; draw(); return true; }
+    return false; }
+  function computer(){ busy=true; $('turn').textContent='نوبت رایانه'; draw();
+    setTimeout(function(){ var r=left%(K+1); var t=r===0?1:r; busy=false;
+      if(!take(t,'c')){ $('turn').textContent='نوبت شما'; $('msg').textContent='رایانه '+fa(t)+' سنگریزه برداشت.'; draw(); } },800); }
+  $('moves').addEventListener('click',function(e){ var b=e.target.closest('button[data-t]'); if(!b||b.disabled) return;
+    $('msg').textContent=''; if(!take(+b.getAttribute('data-t'),'u')) computer(); });
+  $('start').onclick=function(){ N=clamp($('n'),5,50); K=clamp($('k'),2,6); left=N; over=false; justTaken=[];
+    $('msg').textContent=''; $('showlose').hidden=true; $('lose').hidden=true;
+    if($('first').value==='c') computer(); else { $('turn').textContent='نوبت شما'; draw(); } };
+  $('showlose').onclick=function(){ var a=[]; for(var x=0;x<=N;x+=K+1) a.push(fa(x));
+    $('lose').hidden=false; $('lose').textContent='با برداشتن ۱ تا '+fa(K)+' سنگریزه در هر نوبت، موقعیت‌های باخت (برای کسی که نوبت اوست) مضرب‌های '+fa(K+1)+' هستند: '+a.join('، '); };
+  draw(); $('turn').textContent='برای شروع، «شروع بازی» را بزنید.';
+})();
+</script>
+</div>

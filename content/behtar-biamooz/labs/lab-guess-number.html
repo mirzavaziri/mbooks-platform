@@ -1,0 +1,62 @@
+<div class="lab" id="lab-guess-number">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>حدس عدد</h3></div>
+<style>
+#lab-guess-number [hidden]{display:none!important}
+#lab-guess-number .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-guess-number button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-guess-number button.on,#lab-guess-number button.main{background:var(--clay);color:#fff;border-color:var(--clay)}
+#lab-guess-number input[type=number]{width:5.5em}
+#lab-guess-number .bar{position:relative;height:26px;border:1px solid var(--rule);border-radius:4px;background:#2f6f5e;overflow:hidden;margin:.8rem 0 .2rem;direction:ltr}
+#lab-guess-number .cut{position:absolute;top:0;bottom:0;background:#c9c5bd;transition:all .3s}
+#lab-guess-number .ends{display:flex;justify-content:space-between;direction:ltr;font-size:.85rem;color:var(--ink-2)}
+#lab-guess-number .msg{min-height:1.6em;font-weight:600;color:var(--clay)}
+#lab-guess-number ol{margin:.3rem 0;padding-inline-start:1.4rem;font-size:.92rem}
+</style>
+<div class="row">
+  <label>بازه: ۱ تا <input type="number" min="10" max="1000" value="100" data-k="n"></label>
+  <button class="on" data-k="m1">من حدس می‌زنم</button>
+  <button data-k="m2">رایانه حدس می‌زند</button>
+  <button class="main" data-k="start">شروع</button>
+</div>
+<div class="bar" data-k="bar"><div class="cut" data-k="cl" style="left:0;width:0"></div><div class="cut" data-k="cr" style="right:0;width:0"></div></div>
+<div class="ends"><span>1</span><span data-k="nend">100</span></div>
+<div data-k="p1" hidden>
+  <div class="row"><label>حدس شما: <input type="number" data-k="g"></label><button class="main" data-k="try">بررسی</button></div>
+</div>
+<div data-k="p2" hidden>
+  <div class="row" data-k="q"></div>
+  <div class="row"><button data-k="yes">بله</button><button data-k="no">خیر</button></div>
+</div>
+<div class="msg" data-k="msg" aria-live="polite"></div>
+<ol data-k="log"></ol>
+<script>
+(function(){
+  var root=document.getElementById('lab-guess-number'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var mode=1,N=100,lo=1,hi=100,secret=0,count=0,over=true,mid=0;
+  function best(n){ var k=0; while(Math.pow(2,k)<n) k++; return k; }
+  function bar(){ $('cl').style.width=((lo-1)/N*100)+'%'; $('cr').style.width=((N-hi)/N*100)+'%'; $('nend').textContent=N; }
+  function log(s){ var li=document.createElement('li'); li.textContent=s; $('log').appendChild(li); }
+  function setMode(m){ mode=m; $('m1').classList.toggle('on',m===1); $('m2').classList.toggle('on',m===2); $('p1').hidden=$('p2').hidden=true; $('msg').textContent='«شروع» را بزنید.'; }
+  function ask(){ mid=Math.floor((lo+hi)/2); $('q').textContent='سؤال '+fa(count+1)+': آیا عدد شما از '+fa(mid)+' بزرگ‌تر است؟'; }
+  $('start').onclick=function(){ N=Math.max(10,Math.min(1000,parseInt($('n').value,10)||100)); $('n').value=N; lo=1; hi=N; count=0; over=false; $('log').innerHTML=''; bar();
+    if(mode===1){ secret=1+Math.floor(Math.random()*N); $('p1').hidden=false; $('p2').hidden=true; $('msg').textContent='عددی از ۱ تا '+fa(N)+' انتخاب کرده‌ام. حدس بزنید.'; $('g').value=''; $('g').focus(); }
+    else { $('p2').hidden=false; $('p1').hidden=true; $('msg').textContent='عددی از ۱ تا '+fa(N)+' در ذهن بگیرید و به سؤال‌ها جواب دهید. حداکثر '+fa(best(N))+' سؤال لازم است.'; ask(); } };
+  $('try').onclick=function(){ if(over||mode!==1) return; var g=parseInt($('g').value,10); if(!(g>=1&&g<=N)){ $('msg').textContent='عددی از ۱ تا '+fa(N)+' وارد کنید.'; return; }
+    count++;
+    if(g===secret){ over=true; lo=hi=g; bar(); log(fa(g)+' ← درست است'); $('msg').textContent='درست است! با '+fa(count)+' حدس پیدا کردید. کمترین تعدادی که همیشه کافی است '+fa(best(N))+' است (کوچک‌ترین k با 2^k ≥ '+fa(N)+').'; }
+    else if(g<secret){ lo=Math.max(lo,g+1); log(fa(g)+' ← بزرگ‌تر است'); $('msg').textContent='بزرگ‌تر است.'; bar(); }
+    else { hi=Math.min(hi,g-1); log(fa(g)+' ← کوچک‌تر است'); $('msg').textContent='کوچک‌تر است.'; bar(); }
+    $('g').select(); };
+  $('g').addEventListener('keydown',function(e){ if(e.key==='Enter') $('try').click(); });
+  function answer(yes){ if(over||mode!==2) return; count++; log('بزرگ‌تر از '+fa(mid)+'؟ '+(yes?'بله':'خیر'));
+    if(yes) lo=mid+1; else hi=mid; bar();
+    if(lo===hi){ over=true; $('q').textContent=''; $('msg').textContent='عدد شما '+fa(lo)+' است! با '+fa(count)+' سؤال.'; }
+    else { $('msg').textContent='بازه‌ی باقی‌مانده: '+fa(lo)+' تا '+fa(hi)+' ('+fa(hi-lo+1)+' عدد).'; ask(); } }
+  $('yes').onclick=function(){ answer(true); }; $('no').onclick=function(){ answer(false); };
+  $('m1').onclick=function(){ setMode(1); }; $('m2').onclick=function(){ setMode(2); };
+  bar(); setMode(1);
+})();
+</script>
+</div>
