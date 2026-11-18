@@ -41,7 +41,7 @@ export default async function authRoutes(app: FastifyInstance) {
   // phone-OTP login), so a gateway user never has to sign in separately
   // here. Finds-or-creates the mbooks account by phone and starts a normal
   // session, then sends the browser on to the library.
-  app.get<{ Querystring: { token?: string } }>('/api/auth/sso', async (request, reply) => {
+  app.get<{ Querystring: { token?: string; next?: string } }>('/api/auth/sso', async (request, reply) => {
     const token = request.query.token;
     if (!token) return reply.code(400).send({ error: 'missing_token' });
 
@@ -50,7 +50,9 @@ export default async function authRoutes(app: FastifyInstance) {
 
     const userId = await findOrCreateSsoUser(payload);
     await createSession(userId, request.headers['user-agent'], reply);
-    return reply.redirect('/library');
+    // Only a same-site path is accepted as a return address.
+    const next = request.query.next;
+    return reply.redirect(next && /^\/(?!\/)/.test(next) ? next : '/library');
   });
 
   app.post('/api/auth/logout', async (request, reply) => {

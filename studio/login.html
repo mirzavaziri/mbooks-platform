@@ -49,6 +49,10 @@
 </div>
 
 <script>
+// After signing in, go back to the page that sent the visitor here (a
+// private book's reader page sends /login?next=/<slug>/), same-site only.
+function nextPath(){ var n=new URLSearchParams(location.search).get('next'); return n && /^\/(?!\/)/.test(n) ? n : '/library'; }
+
   var loginView = document.getElementById('login-view');
   var linkView = document.getElementById('link-view');
   document.getElementById('show-link-view').onclick = function () { loginView.hidden = true; linkView.hidden = false; };
@@ -64,7 +68,7 @@
     msg.className = 'msg'; msg.textContent = '';
     post('/api/auth/login', { email: document.getElementById('email').value, password: document.getElementById('password').value })
       .then(function (r) {
-        if (r.ok) { location.href = '/library'; return; }
+        if (r.ok) { location.href = nextPath(); return; }
         msg.className = 'msg err'; msg.textContent = 'Wrong email or password.';
       });
   };
@@ -77,7 +81,7 @@
       name: document.getElementById('link-name').value.trim(),
       password: document.getElementById('link-password').value,
     }).then(function (r) {
-      if (r.ok) { location.href = '/library'; return; }
+      if (r.ok) { location.href = nextPath(); return; }
       msg.className = 'msg err';
       msg.textContent = r.data.error === 'password_too_short' ? 'Password must be at least 8 characters.' : 'That link is invalid or expired.';
     });

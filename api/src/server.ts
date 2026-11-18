@@ -51,6 +51,27 @@ const HTML = 'text/html; charset=utf-8';
 
 app.get('/login', async (_request, reply) => reply.type(HTML).send(loginHtml));
 
+// nginx auth_request target for the published reader pages (static files
+// under /var/www/mbooks/<slug>/, see nginx/mbooks.conf in the
+// EducationMarket repo). nginx passes the requested path in
+// X-Original-URI; 204 lets the static file through, 401 makes nginx send
+// the visitor to /login?next=..., 403 means signed in but not a member.
+// Public and unlisted books are open to everyone; private ones only to
+// their members and admins. Paths that are not a book's folder are
+// allowed (nginx then serves them or 404s as before).
+app.get('/_access', async (request, reply) => {
+  const uri = String(request.headers['x-original-uri'] ?? '');
+  const slug = decodeURIComponent(uri.split('?')[0].split('/')[1] ?? '');
+  if (!slug) return reply.code(204).send();
+  const { rows } = await pool.query('select id, visibility from books where slug = $1 and deleted_at is null', [slug]);
+  const book = rows[0];
+  if (!book || book.visibility !== 'private') return reply.code(204).send();
+  const user = await currentUser(request);
+  if (!user) return reply.code(401).send();
+  const role = await roleInBook(user.id, book.id);
+  return reply.code(role ? 204 : 403).send();
+});
+
 // The public catalog of every published book - what a plain visit to
 // mbooks.arith.land now shows, replacing the old hardcoded redirect to
 // one specific book (nginx/mbooks.conf in the EducationMarket repo used
