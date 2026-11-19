@@ -170,6 +170,23 @@ export function renderBody(raw: string, ctx: InlineContext): string {
       continue;
     }
 
+    // "> " lines: a blockquote (an epigraph, a notice quoted inside a
+    // story). Consecutive ">" lines form one quote; a bare ">" separates
+    // its paragraphs. The studio preview gets the same from marked.js.
+    if (/^>(\s|$)/.test(trimmed)) {
+      flushPara();
+      flushList();
+      const inner: string[] = [];
+      let j = i;
+      while (j < lines.length && /^>(\s|$)/.test(lines[j].trim())) {
+        inner.push(lines[j].trim().replace(/^>\s?/, ''));
+        j++;
+      }
+      html.push(`<blockquote>${renderBody(inner.join('\n'), ctx)}</blockquote>`);
+      i = j - 1;
+      continue;
+    }
+
     if (trimmed.startsWith('|') && i + 1 < lines.length && SEPARATOR_ROW.test(lines[i + 1].trim())) {
       flushPara();
       flushList();

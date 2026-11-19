@@ -222,7 +222,7 @@ function renderMarginNote(type: string, f: any, deps: RenderDeps): string {
   } else if (type === 'history') {
     inner = `<p>${renderInline(f.body ?? '', ctx)}</p>`;
   } else if (type === 'quote') {
-    const byline = [f.author, f.source].filter(Boolean).join(', ');
+    const byline = [f.author, f.source].filter(Boolean).join(lang === 'fa' ? '، ' : ', ');
     inner = `<blockquote><p>${renderInline(f.text ?? '', ctx)}</p>${byline ? `<p>${escapeHtml(byline)}</p>` : ''}</blockquote>`;
   } else {
     // aside (Persian): a main note, plus optional "why"/"more" asides

@@ -110,6 +110,10 @@ box-shadow:0 10px 30px rgba(15,25,40,.18) }
 .code-win pre{ margin:0; max-height:17rem; overflow:auto; padding:.8rem 1rem; font-family:var(--f-mono); font-size:.8rem; line-height:1.55; tab-size:4; direction:ltr; text-align:left }
 .code-win.open pre{ max-height:none }
 pre code{ font-family:inherit }
+/* Inline code is always left-to-right and isolated from the Persian text
+   around it, so a trailing ' or " (the note names in «گره»: do', DO") stays
+   at the end of the token instead of jumping to its start. */
+:not(pre) > code{ direction:ltr; unicode-bidi:isolate; font-family:var(--f-mono); font-size:.9em }
 /* Code that is not runnable stays a bare <pre> (no code window around it):
    it still must scroll inside itself rather than widen the page. */
 pre{ max-width:100%; overflow-x:auto; direction:ltr; text-align:left }
@@ -154,6 +158,8 @@ details.reveal[open] summary{ margin-bottom:.2rem }
 .mnote.quote blockquote{ border-inline-start:0; padding:0; font-size:1rem; font-family:var(--f-body) }
 
 h1{ font-size:clamp(1.7rem,3.6vw,2.3rem); font-weight:600; line-height:1.15; margin:3.2rem 0 1rem; padding-top:1.4rem; border-top:3px double var(--rule); text-wrap:balance }
+#dir-root blockquote:not(.mnote blockquote){ margin:1rem 0; padding:.2rem 0; padding-inline-start:1rem; border-inline-start:3px solid var(--rule); color:var(--ink-2) }
+#dir-root blockquote:not(.mnote blockquote) p{ margin:.35rem 0 }
 .bookfig{ margin:1.2rem 0; text-align:center }
 .bookfig img{ max-width:100%; height:auto; background:#fbf8f1; border-radius:4px; padding:.4rem }
 .bookfig p{ margin:.3rem 0 }
