@@ -363,6 +363,10 @@ function main() {
   const keyByTerm = new Map(glossary.map((g) => [g.term, g.key]));
   const usedTerms = new Set<string>();
   const glsRe = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
+  // Fields holding source code or a hand-built widget are copied verbatim:
+  // "[[1]]" in a lab's JavaScript or "@media" in its CSS is not a glossary
+  // link or a cross-reference, and rewriting it would break the widget.
+  const RAW_FIELDS = new Set(['code', 'html']);
   function linkGlossary(s: string): string {
     return s.replace(glsRe, (_m, term: string, shown?: string) => {
       const key = keyByTerm.get(term.trim());
@@ -376,7 +380,7 @@ function main() {
   }
   for (const b of blocks) {
     for (const k of Object.keys(b.fields)) {
-      if (typeof b.fields[k] === 'string' && k !== 'code') b.fields[k] = linkGlossary(b.fields[k]);
+      if (typeof b.fields[k] === 'string' && !RAW_FIELDS.has(k)) b.fields[k] = linkGlossary(b.fields[k]);
     }
   }
   for (const g of glossary) if (!usedTerms.has(g.term)) warnings.push(`glossary entry never linked from the text: ${g.term}`);
@@ -411,7 +415,7 @@ function main() {
       else warnings.push(`proof ${b.id}: of=@${b.fields.of} not found`);
     }
     for (const [k, v] of Object.entries(b.fields)) {
-      if (typeof v !== 'string' || k === 'code' || k === '__label') continue;
+      if (typeof v !== 'string' || RAW_FIELDS.has(k) || k === '__label') continue;
       b.fields[k] = v.replace(/(?<![\w.])@([a-zA-Z0-9-]+)/g, (m, orig: string) => {
         const r = refFor(orig);
         if (!r) {
