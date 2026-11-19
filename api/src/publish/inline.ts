@@ -53,8 +53,11 @@ export function renderInline(raw: string, ctx: InlineContext): string {
 
   return parts
     .map((p) => {
-      if (p.math === 'display') return `<span class="math display">\\[${p.text}\\]</span>`;
-      if (p.math === 'inline') return `<span class="math inline">\\(${p.text}\\)</span>`;
+      // The TeX source is HTML-escaped (MathJax reads the text content, so
+      // \\(r<n\\) still typesets): unescaped, "<n" opened a bogus tag that
+      // swallowed the rest of the paragraph.
+      if (p.math === 'display') return `<span class="math display">\\[${escapeHtml(p.text)}\\]</span>`;
+      if (p.math === 'inline') return `<span class="math inline">\\(${escapeHtml(p.text)}\\)</span>`;
       return renderPlainInline(p.text, ctx);
     })
     .join('');

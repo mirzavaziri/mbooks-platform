@@ -72,6 +72,12 @@ h3{ font-size:1.18rem; font-weight:600; margin:2rem 0 .5rem }
 
 .math.display{ display:block; overflow-x:auto; overflow-y:hidden }
 mjx-container[display="true"]{ overflow-x:auto; overflow-y:hidden; max-width:100% }
+mjx-container.mjx-wide{ display:block; overflow-x:auto; overflow-y:hidden; max-width:100%; margin:.25rem 0; padding:.1rem 0 }
+/* MathJax's hidden screen-reader copy is as wide as the formula and,
+   being absolutely positioned, widened the whole page on phones. It stays
+   readable to screen readers at 1px. */
+mjx-container mjx-assistive-mml{ width:1px !important; height:1px !important; max-width:1px !important }
+#dir-root{ overflow-wrap:break-word }
 img{ max-width:100%; height:auto }
 table{ border-collapse:collapse; margin:1rem auto; font-variant-numeric:tabular-nums; font-size:.98rem; display:block; overflow-x:auto; max-width:100%; width:max-content }
 th,td{ padding:.3rem .9rem; border-bottom:1px solid var(--rule) }
@@ -187,7 +193,7 @@ export function renderPage(meta: PageMeta, tocHtml: string, bodyHtml: string, fo
 ${googleFonts}
 <title>${escapeHtml(meta.title)}</title>
 <style>:root{--f-body:${bodyFontStack}}${fontFaceCss(meta.fonts)}${BASE_CSS}</style>
-<script>(function(){var s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js";document.head.appendChild(s);})();</script>
+<script>${MATHJAX_BOOT}</script>
 </head><body data-theme="light">
 <div id="dir-root" dir="${dirAttr}">
 <header id="title-block-header">
@@ -203,6 +209,29 @@ ${bodyHtml}
 <script>${footerJs}</script>
 </body></html>`;
 }
+
+// MathJax comes from the copy vendored at /vendor/ on this same host (a
+// jsDelivr URL is unreliable from Iran, leaving raw TeX on the page).
+// Inline formulas never line-break in MathJax 3, so after typesetting,
+// any inline formula wider than its paragraph becomes its own
+// horizontally scrollable line (class mjx-wide) instead of pushing the
+// whole page wider than a phone screen; re-checked on resize/rotation.
+const MATHJAX_BOOT = `
+window.MathJax = { startup: { pageReady: function () {
+  return MathJax.startup.defaultPageReady().then(function () {
+    function markWide() {
+      document.querySelectorAll('mjx-container:not([display="true"])').forEach(function (m) {
+        m.classList.remove('mjx-wide');
+        var host = m.parentElement && m.parentElement.closest('p, li, td, th, div, details, summary');
+        if (host && m.getBoundingClientRect().width > host.clientWidth) m.classList.add('mjx-wide');
+      });
+    }
+    markWide();
+    var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(markWide, 200); });
+  });
+} } };
+(function(){var s=document.createElement("script");s.src="/vendor/mathjax-tex-svg.js";s.async=true;document.head.appendChild(s);})();
+`;
 
 function escapeHtml(s: string): string {
   return String(s ?? '')
