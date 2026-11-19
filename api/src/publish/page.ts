@@ -108,6 +108,10 @@ box-shadow:0 10px 30px rgba(15,25,40,.18) }
 .code-win pre{ margin:0; max-height:17rem; overflow:auto; padding:.8rem 1rem; font-family:var(--f-mono); font-size:.8rem; line-height:1.55; tab-size:4; direction:ltr; text-align:left }
 .code-win.open pre{ max-height:none }
 pre code{ font-family:inherit }
+/* Code that is not runnable stays a bare <pre> (no code window around it):
+   it still must scroll inside itself rather than widen the page. */
+pre{ max-width:100%; overflow-x:auto; direction:ltr; text-align:left }
+pre:not(.runnable){ margin:1rem 0; padding:.7rem .9rem; border:1px solid var(--rule); border-radius:4px; background:var(--code-bg); font-family:var(--f-mono); font-size:.8rem; line-height:1.55 }
 button, .btn{ font:inherit; font-family:var(--f-label); letter-spacing:.04em; font-size:.92rem; border-radius:3px; padding:.3rem .8rem;
 border:1px solid var(--moss); background:var(--moss); color:var(--sheet); cursor:pointer; text-decoration:none; display:inline-block }
 button.ghost, .btn.ghost{ background:transparent; color:var(--moss) }
