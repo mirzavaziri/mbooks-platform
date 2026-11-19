@@ -14,6 +14,8 @@ export type PageMeta = {
   subtitle?: string;
   authors: string[];
   affiliation?: string;
+  // book_settings.crawlers === 'block': ask search engines and AI tools not to index or reuse the page
+  blockCrawlers?: boolean;
   fonts?: PageFont[];
   bodyFont?: string;
   headingFont?: string;
@@ -204,6 +206,7 @@ export function renderPage(meta: PageMeta, tocHtml: string, bodyHtml: string, fo
   return `<!doctype html><html lang="${meta.lang}" dir="${dirAttr}"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
 ${googleFonts}
 <title>${escapeHtml(meta.title)}</title>
+${meta.blockCrawlers ? '<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai">' : ''}
 <style>:root{--f-body:${bodyFontStack}}${fontFaceCss(meta.fonts)}${BASE_CSS}</style>
 <script>${MATHJAX_BOOT}</script>
 </head><body data-theme="light">

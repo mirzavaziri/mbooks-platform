@@ -1335,7 +1335,11 @@ function uploadCover(file){
 function saveSettings(){
   readSettings();
   var d=bookDraft, ren=d._rename||{}, old=d._oldCover;
-  var doc={}; ['title','subtitle','edition','affiliation','authors','cover','bodyFont','headingFont','labelFont','marginFont','align','direction','lang','digits','chapters','fonts'].forEach(function(k){ if(d[k]!==undefined) doc[k]=d[k]; });
+  // Start from the stored settings so keys this form does not edit
+  // (glossary, robots, ...) survive a save; .set() replaces the whole
+  // document, and a fresh {} here once silently erased a book's glossary.
+  var doc={}; Object.keys(book||{}).forEach(function(k){ if(k.charAt(0)!=='_') doc[k]=book[k]; });
+  ['title','subtitle','edition','affiliation','authors','cover','bodyFont','headingFont','labelFont','marginFont','align','direction','lang','digits','chapters','fonts'].forEach(function(k){ if(d[k]!==undefined) doc[k]=d[k]; else delete doc[k]; });
   doc.updatedAt=new Date().toISOString(); if(me.id) doc.updatedBy=me.id;
   var msg=$('#bk-msg'); msg.textContent='Saving…';
   var jobs=[db.doc('settings/book').set(doc)];

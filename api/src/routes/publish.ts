@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { pool } from '../db/pool.js';
 import { requireUser, roleAtLeast, roleInBook } from '../lib/auth.js';
 import { renderBookToHtml } from '../publish/render.js';
+import { writeRobotsTxt } from '../publish/robots.js';
 
 // Where the published static reader output is actually served from - see
 // nginx/mbooks.conf (EducationMarket repo) and the publish_output bind
@@ -38,6 +39,7 @@ export default async function publishRoutes(app: FastifyInstance) {
       const outDir = join(PUBLISH_DIR, slug);
       mkdirSync(outDir, { recursive: true });
       writeFileSync(join(outDir, 'index.html'), html, 'utf8');
+      await writeRobotsTxt(PUBLISH_DIR);
 
       await pool.query(
         `update published_versions set status = 'success', build_log = $1, finished_at = now() where id = $2`,

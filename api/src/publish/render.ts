@@ -148,6 +148,7 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
       subtitle: settings.subtitle,
       authors: settings.authors ?? [],
       affiliation: settings.affiliation,
+      blockCrawlers: settings.crawlers === 'block',
       fonts,
       bodyFont: settings.bodyFont,
       headingFont: settings.headingFont,

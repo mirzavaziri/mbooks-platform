@@ -5,6 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pool } from './db/pool.js';
 import { renderBookToHtml } from './publish/render.js';
+import { writeRobotsTxt } from './publish/robots.js';
 
 const PUBLISH_DIR = process.env.MBOOKS_PUBLISH_DIR ?? '/published';
 
@@ -42,6 +43,8 @@ async function main() {
       console.error(`failed ${slug}:`, err);
     }
   }
+  const blocked = await writeRobotsTxt(PUBLISH_DIR);
+  console.log(`robots.txt: AI crawlers kept out of ${blocked.length ? blocked.join(', ') : 'no book'}`);
   await pool.end();
 }
 main();
