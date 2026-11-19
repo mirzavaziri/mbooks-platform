@@ -16,6 +16,8 @@ export type PageMeta = {
   affiliation?: string;
   // book_settings.crawlers === 'block': ask search engines and AI tools not to index or reuse the page
   blockCrawlers?: boolean;
+  // fiction-fa: illustrations are decorative, drawn smaller than figures
+  fiction?: boolean;
   fonts?: PageFont[];
   bodyFont?: string;
   headingFont?: string;
@@ -162,6 +164,10 @@ h1{ font-size:clamp(1.7rem,3.6vw,2.3rem); font-weight:600; line-height:1.15; mar
 #dir-root blockquote:not(.mnote blockquote) p{ margin:.35rem 0 }
 .bookfig{ margin:1.2rem 0; text-align:center }
 .bookfig img{ max-width:100%; height:auto; background:#fbf8f1; border-radius:4px; padding:.4rem }
+/* In a story the pictures are illustrations, not figures to read: at most
+   about a third of the text column on a computer, two thirds on a phone,
+   and never taller than a short paragraph block. */
+.fiction .bookfig img{ width:auto; max-width:min(66%, 20rem); max-height:15rem; object-fit:contain }
 .bookfig p{ margin:.3rem 0 }
 .bookfig p:last-child{ font-size:.92rem; color:var(--ink-2) }
 .contents{ margin:1.6rem 0 2rem; padding:1rem 1.2rem; background:var(--sheet); border:1px solid var(--rule); border-radius:4px; font-size:1rem }
@@ -215,7 +221,7 @@ ${googleFonts}
 ${meta.blockCrawlers ? '<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai">' : ''}
 <style>:root{--f-body:${bodyFontStack}}${fontFaceCss(meta.fonts)}${BASE_CSS}</style>
 <script>${MATHJAX_BOOT}</script>
-</head><body data-theme="light">
+</head><body data-theme="light"${meta.fiction ? ' class="fiction"' : ''}>
 <div id="dir-root" dir="${dirAttr}">
 <header id="title-block-header">
 <h1 class="title">${escapeHtml(meta.title)}</h1>

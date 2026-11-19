@@ -149,6 +149,7 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
       authors: settings.authors ?? [],
       affiliation: settings.affiliation,
       blockCrawlers: settings.crawlers === 'block',
+      fiction: book.type === 'fiction-fa',
       fonts,
       bodyFont: settings.bodyFont,
       headingFont: settings.headingFont,
