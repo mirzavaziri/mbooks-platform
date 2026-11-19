@@ -115,7 +115,11 @@ button:hover:not(:disabled), .btn:hover{ filter:brightness(1.08) }
 .lab h3{ margin:0 }
 
 .exercise{ margin:1.6rem 0; padding-top:1rem; border-top:1px dashed var(--rule) }
-.exercise > p:first-child{ margin-top:0; display:flex; flex-wrap:wrap; align-items:center; gap:.45rem }
+/* A plain paragraph, not flex: as a flex container every text run and
+   formula of the statement became its own unshrinkable box, so a long
+   formula pushed the page wider than a phone and the text never flowed. */
+.exercise > p:first-child{ margin-top:0 }
+.exercise > p:first-child > .ex-tag{ display:inline-block; margin-inline-end:.3rem; vertical-align:middle }
 .exercise > p:first-child strong{ font-family:var(--f-label); letter-spacing:.04em; margin-inline-end:.2rem }
 .ex-tag{ font-family:var(--f-label); font-size:.78rem; letter-spacing:.06em; padding:.08rem .5rem; border-radius:99px; border:1px solid currentColor; line-height:1.5 }
 .ex-tag-pure{ color:var(--ink-2) } .ex-tag-omath, .ex-tag-oinf{ color:var(--slate) }
