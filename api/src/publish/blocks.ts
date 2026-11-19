@@ -1,5 +1,5 @@
 import { renderBody, renderInline, type InlineContext } from './inline.js';
-import { ENV_TYPES } from './numbering.js';
+import { ENV_TYPES, localDigits } from './numbering.js';
 
 export type AssetResolver = (ref: string) => { url: string } | null;
 
@@ -7,6 +7,7 @@ export type RenderDeps = {
   ctx: InlineContext;
   lang: 'en' | 'fa';
   resolveAsset: AssetResolver;
+  digits?: string; // book_settings.digits: 'latin' keeps Latin digits in a fa book
 };
 
 const EX_TAG_LABEL: Record<'en' | 'fa', Record<string, string>> = {
@@ -153,7 +154,7 @@ function renderExercise(blockId: string, f: any, deps: RenderDeps): string {
   const hintsHtml = hints
     .map(
       (h, i) =>
-        `<details class="reveal"><summary>${HINT_WORD[lang]} ${i + 1}</summary><div class="reveal-body">${renderBody(h, ctx)}</div></details>`,
+        `<details class="reveal"><summary>${HINT_WORD[lang]} ${localDigits(String(i + 1), lang, deps.digits)}</summary><div class="reveal-body">${renderBody(h, ctx)}</div></details>`,
     )
     .join('\n');
 

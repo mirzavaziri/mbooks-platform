@@ -117,7 +117,7 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
       const blocks = (blocksBySection.get(section.id) ?? []).slice().sort((a, b) => a.order - b.order);
       for (const block of blocks) {
         try {
-          bodyParts.push(renderBlock(block, { ctx, lang, resolveAsset }));
+          bodyParts.push(renderBlock(block, { ctx, lang, resolveAsset, digits: settings.digits }));
         } catch (err) {
           warnings.push(`block ${block.id} (${block.type}) failed to render: ${(err as Error).message}`);
         }
