@@ -1,5 +1,5 @@
 import { pool } from '../db/pool.js';
-import type { GlossaryEntry, InlineContext } from './inline.js';
+import { renderInline, type GlossaryEntry, type InlineContext } from './inline.js';
 import { buildNumbering, localDigits, type BlockRow, type SectionRow } from './numbering.js';
 import { renderBlock, type AssetResolver } from './blocks.js';
 import { renderPage, type PageFont } from './page.js';
@@ -88,12 +88,12 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
     chapters
       .map(
         (c) =>
-          `<li><a href="#${c.anchor}">${escapeHtml(c.chapter)}</a><ul>` +
+          `<li><a href="#${c.anchor}">${renderInline(c.chapter, ctx)}</a><ul>` +
           c.sections
             .filter((s) => s.num || s.title !== c.chapter)
             .map((s) => {
-              const label = s.num ? `${localDigits(s.num, lang, settings.digits)} ${s.title}` : s.title;
-              return `<li><a href="#sec-${s.id}">${escapeHtml(label)}</a></li>`;
+              const label = s.num ? `${escapeHtml(localDigits(s.num, lang, settings.digits))} ${renderInline(s.title, ctx)}` : renderInline(s.title, ctx);
+              return `<li><a href="#sec-${s.id}">${label}</a></li>`;
             })
             .join('') +
           '</ul></li>',
@@ -104,15 +104,16 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
   const bodyParts: string[] = [];
   for (const chapterGroup of chapters) {
     bodyParts.push(
-      `<h1 class="unnumbered${chapterGroup.numbered ? ' chapter' : ''}" id="${chapterGroup.anchor}">${escapeHtml(chapterGroup.chapter)}</h1>`,
+      `<h1 class="unnumbered${chapterGroup.numbered ? ' chapter' : ''}" id="${chapterGroup.anchor}">${renderInline(chapterGroup.chapter, ctx)}</h1>`,
     );
     for (const section of chapterGroup.sections) {
-      const label = section.num ? `${localDigits(section.num, lang, settings.digits)} ${section.title}` : section.title;
+      // Titles may carry inline math (e.g. «حالت $n=4$ِ فرما»).
+      const label = section.num ? `${escapeHtml(localDigits(section.num, lang, settings.digits))} ${renderInline(section.title, ctx)}` : renderInline(section.title, ctx);
       // An unnumbered section that merely repeats its chapter's name (a
       // chapter like «مقدمه» with no sections of its own) gets only an
       // anchor, not a second identical heading.
       if (!section.num && section.title === chapterGroup.chapter) bodyParts.push(`<span id="sec-${section.id}"></span>`);
-      else bodyParts.push(`<h2 id="sec-${section.id}">${escapeHtml(label)}</h2>`);
+      else bodyParts.push(`<h2 id="sec-${section.id}">${label}</h2>`);
 
       const blocks = (blocksBySection.get(section.id) ?? []).slice().sort((a, b) => a.order - b.order);
       for (const block of blocks) {

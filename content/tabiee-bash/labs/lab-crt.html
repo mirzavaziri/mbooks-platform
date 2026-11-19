@@ -1,0 +1,50 @@
+<div class="lab" id="lab-crt">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>قضیه‌ی باقی‌مانده‌ی چینی روی جدول</h3></div>
+<style>
+#lab-crt .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-crt input{font:inherit;width:4.5em;padding:.2rem .4rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink)}
+#lab-crt button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-crt table{border-collapse:collapse;margin:.6rem auto;direction:ltr;font-variant-numeric:tabular-nums}
+#lab-crt td,#lab-crt th{width:2.1em;height:1.7em;text-align:center;font-size:.75rem;border:1px solid var(--rule)}
+#lab-crt th{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+#lab-crt td.on{background:var(--clay);color:#fff;font-weight:700}
+#lab-crt td.trail{background:color-mix(in srgb,var(--clay) 20%,transparent)}
+#lab-crt .res{font-weight:600;min-height:1.3em}
+</style>
+<div class="row">
+  <label>m: <input type="number" data-k="m" value="5" min="2" max="15"></label>
+  <label>n: <input type="number" data-k="n" value="7" min="2" max="15"></label>
+  <label>x ≡ <input type="number" data-k="a" value="3"> (mod m)</label>
+  <label>x ≡ <input type="number" data-k="b" value="2"> (mod n)</label>
+  <button data-k="go">نمایش</button>
+  <button data-k="walk">قدم‌زدن ۰، ۱، ۲، …</button>
+</div>
+<div class="res" data-k="res" aria-live="polite"></div>
+<table data-k="tab"></table>
+<div>خانه‌ی سطر r و ستون s عددی بین ۰ و mn−1 است که باقی‌مانده‌اش بر m برابر r و بر n برابر s است. وقتی m و n نسبت به هم اول باشند، هر خانه دقیقاً یک بار پر می‌شود؛ پیمانه‌ها را مثلاً ۴ و ۶ بگیرید و ببینید چه می‌شود.</div>
+<script>
+(function(){
+  var root=document.getElementById('lab-crt'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  function gcd(a,b){ while(b){ var t=a%b; a=b; b=t; } return a; }
+  var timer=null, m, n, cell;
+  function build(){ if(timer){clearInterval(timer);timer=null;}
+    m=Math.max(2,Math.min(15,Math.floor(+$('m').value))); n=Math.max(2,Math.min(15,Math.floor(+$('n').value)));
+    cell=[]; for(var r=0;r<m;r++){ cell[r]=[]; for(var s=0;s<n;s++) cell[r][s]=null; }
+    var L=m*n/gcd(m,n); for(var x=0;x<L;x++) cell[x%m][x%n]=x; render(-1); }
+  function render(upto,hit){ var t='<tr><th>r \\ s</th>'; for(var s=0;s<n;s++) t+='<th>'+s+'</th>'; t+='</tr>';
+    for(var r=0;r<m;r++){ t+='<tr><th>'+r+'</th>'; for(s=0;s<n;s++){ var v=cell[r][s], cl='';
+        if(v!==null && upto>=0 && v<=upto) cl=(v===upto?'on':'trail'); if(hit!==undefined && v===hit) cl='on';
+        t+='<td class="'+cl+'">'+(v===null?'':((upto<0||v<=upto)?v:''))+'</td>'; } t+='</tr>'; }
+    $('tab').innerHTML=t; }
+  function solve(){ build(); var a=((+$('a').value%m)+m)%m, b=((+$('b').value%n)+n)%n, v=cell[a][b], g=gcd(m,n);
+    render(-1,v===null?undefined:v);
+    $('res').textContent = v===null ? 'جواب ندارد: (m,n) = '+fa(g)+' و این عدد a−b را عاد نمی‌کند.' : 'جواب: x ≡ '+fa(v)+' (به پیمانه‌ی '+fa(m*n/g)+')'+(g>1?' — چون پیمانه‌ها نسبت به هم اول نیستند، فقط '+fa(m*n/g)+' خانه از '+fa(m*n)+' خانه پر می‌شود.':''); }
+  $('go').onclick=solve;
+  $('walk').onclick=function(){ build(); var x=0, L=m*n/gcd(m,n); $('res').textContent='';
+    timer=setInterval(function(){ render(x); $('res').textContent='x = '+fa(x)+' → (x mod '+fa(m)+', x mod '+fa(n)+') = ('+fa(x%m)+', '+fa(x%n)+')'; x++; if(x>=L){ clearInterval(timer); timer=null; } }, 350); };
+  solve();
+})();
+</script>
+</div>

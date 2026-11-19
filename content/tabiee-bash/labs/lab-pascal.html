@@ -1,0 +1,40 @@
+<div class="lab" id="lab-pascal">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>مثلث پاسکال به پیمانه‌ی p</h3></div>
+<style>
+#lab-pascal .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-pascal select{font:inherit;padding:.2rem .5rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink)}
+#lab-pascal input[type=range]{width:10em}
+#lab-pascal canvas{width:100%;max-width:640px;display:block;margin:.6rem auto;image-rendering:pixelated;cursor:crosshair}
+#lab-pascal .res{font-weight:600;min-height:1.3em;font-variant-numeric:tabular-nums}
+</style>
+<div class="row">
+  <label>پیمانه: <select data-k="p"><option>2</option><option>3</option><option>5</option><option>7</option></select></label>
+  <label>تعداد سطرها: <input type="range" min="8" max="128" value="64" data-k="rows"> <b data-k="rv"></b></label>
+  <label><input type="checkbox" data-k="color"> رنگ بر حسب باقی‌مانده</label>
+</div>
+<canvas data-k="cv" width="640" height="560" aria-label="مثلث پاسکال که خانه‌های بخش‌پذیر بر p سفیدند"></canvas>
+<div class="res" data-k="res" aria-live="polite">نشانگر را روی یک سطر ببرید.</div>
+<script>
+(function(){
+  var root=document.getElementById('lab-pascal'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var PAL=['#ffffff','#b5532f','#2980b9','#27ae60','#8e44ad','#d4a017','#16a085'];
+  var tri=[], p=2, R=64, cell=1;
+  function digits(n,b){ var d=[]; if(n===0) return [0]; while(n){ d.push(n%b); n=Math.floor(n/b); } return d; }
+  function draw(){
+    p=+$('p').value; R=+$('rows').value; $('rv').textContent=fa(R);
+    var cv=$('cv'), ctx=cv.getContext('2d'), W=cv.width, H=cv.height; cell=Math.min(W/R, H/R);
+    tri=[]; tri.push([1]); for(var n=1;n<R;n++){ var row=[1]; for(var k=1;k<n;k++) row.push((tri[n-1][k-1]+tri[n-1][k])%p); row.push(1); tri.push(row); }
+    ctx.clearRect(0,0,W,H); var col=$('color').checked;
+    for(n=0;n<R;n++) for(k=0;k<=n;k++){ var v=tri[n][k]; if(v===0) continue;
+      ctx.fillStyle=col?PAL[v%PAL.length]:'#2b2b2b'; var x=W/2+(k-n/2)*cell-cell/2, y=n*cell; ctx.fillRect(x,y,Math.max(cell-(cell>4?1:0),1),Math.max(cell-(cell>4?1:0),1)); }
+  }
+  $('cv').addEventListener('mousemove',function(ev){ var r=this.getBoundingClientRect(), y=(ev.clientY-r.top)*this.height/r.height, n=Math.floor(y/cell);
+    if(n<0||n>=R) return; var nz=tri[n].filter(function(v){return v!==0;}).length, prod=digits(n,p).reduce(function(a,d){return a*(d+1);},1);
+    $('res').innerHTML='سطر '+fa(n)+' — در مبنای '+fa(p)+': <bdi dir="ltr">'+digits(n,p).reverse().join('')+'</bdi> — ضرایبِ بخش‌ناپذیر بر '+fa(p)+': '+fa(nz)+' ، و طبق قضیه‌ی لوکا ∏(رقم+۱) = '+fa(prod); });
+  $('p').onchange=draw; $('rows').oninput=draw; $('color').onchange=draw;
+  draw();
+})();
+</script>
+</div>

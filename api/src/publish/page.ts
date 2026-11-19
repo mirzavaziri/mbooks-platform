@@ -72,6 +72,10 @@ h3{ font-size:1.18rem; font-weight:600; margin:2rem 0 .5rem }
 
 .math.display{ display:block; overflow-x:auto; overflow-y:hidden }
 mjx-container[display="true"]{ overflow-x:auto; overflow-y:hidden; max-width:100% }
+.endmark{ float:right; margin-inline-start:.6rem; color:var(--ink-3, var(--ink-2)); font-size:.9em; line-height:inherit }
+[dir="rtl"] .endmark{ float:left }
+.endmark-line{ margin:0; overflow:hidden }
+.env::after, .proofblock::after{ content:""; display:block; clear:both }
 mjx-container.mjx-wide{ display:block; overflow-x:auto; overflow-y:hidden; max-width:100%; margin:.25rem 0; padding:.1rem 0 }
 /* MathJax's hidden screen-reader copy is as wide as the formula and,
    being absolutely positioned, widened the whole page on phones. It stays

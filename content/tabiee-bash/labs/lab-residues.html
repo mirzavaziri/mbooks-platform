@@ -1,0 +1,44 @@
+<div class="lab" id="lab-residues">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>مانده‌های درجه‌ی دوم روی دایره</h3></div>
+<style>
+#lab-residues .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-residues select,#lab-residues button{font:inherit;padding:.25rem .6rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-residues svg{width:100%;max-width:420px;height:auto;display:block;margin:.4rem auto}
+#lab-residues .res{font-weight:600;min-height:1.3em}
+#lab-residues .seq{direction:ltr;text-align:center;font-family:ui-monospace,Menlo,monospace;letter-spacing:.05em;word-break:break-all}
+</style>
+<div class="row">
+  <label>عدد اول p: <select data-k="p"></select></label>
+  <label><input type="checkbox" data-k="arrows" checked> پاره‌خط از هر x به x²</label>
+</div>
+<svg viewBox="-170 -170 340 340" data-k="svg" role="img" aria-label="عددهای ۰ تا p−1 روی دایره، مانده‌ها پررنگ"></svg>
+<div class="res" data-k="res" aria-live="polite"></div>
+<div class="seq" data-k="seq"></div>
+<script>
+(function(){
+  var root=document.getElementById('lab-residues'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var P=[5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97];
+  $('p').innerHTML=P.map(function(p){return '<option'+(p===13?' selected':'')+'>'+p+'</option>';}).join('');
+  function run(){
+    var p=+$('p').value, R=135, sq={}, s='';
+    for(var x=1;x<p;x++) sq[x*x%p]=true;
+    var pos=function(i,r){ var a=-Math.PI/2+2*Math.PI*i/p; return [ (r||R)*Math.cos(a), (r||R)*Math.sin(a) ]; };
+    s+='<circle r="'+R+'" fill="none" stroke="var(--rule)"/>';
+    if($('arrows').checked) for(x=1;x<p;x++){ var a=pos(x), b=pos(x*x%p); s+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="var(--clay)" stroke-opacity=".35" stroke-width="1"/>'; }
+    var fs=p>50?8:(p>30?10:12), rr=p>50?4:6;
+    for(x=0;x<p;x++){ var q=pos(x), t=pos(x,R+(p>50?12:16));
+      s+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="'+rr+'" fill="'+(x===0?'#999':(sq[x]?'var(--clay)':'var(--paper,#fff)'))+'" stroke="var(--ink)" stroke-width="1"/>';
+      s+='<text x="'+t[0]+'" y="'+(t[1]+fs/3)+'" font-size="'+fs+'" text-anchor="middle" fill="currentColor">'+x+'</text>'; }
+    $('svg').innerHTML=s;
+    var leg=''; for(x=1;x<p;x++) leg+=sq[x]?'+':'−';
+    var e=((p-1)/2)%2===0, two=sq[2]===true;
+    $('res').textContent='مانده‌ها (پررنگ): '+fa(Object.keys(sq).length)+' از '+fa(p-1)+' ؛ '+(e?'−۱ مانده است (p ≡ ۱ به پیمانه‌ی ۴)':'−۱ نامانده است (p ≡ ۳ به پیمانه‌ی ۴)')+' ؛ ۲ '+(two?'مانده':'نامانده')+' است (p ≡ '+fa(p%8)+' به پیمانه‌ی ۸).';
+    $('seq').textContent='(a/p) for a = 1…p−1:  '+leg;
+  }
+  $('p').onchange=run; $('arrows').onchange=run;
+  run();
+})();
+</script>
+</div>

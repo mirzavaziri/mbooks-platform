@@ -1,0 +1,42 @@
+<div class="lab" id="lab-sieve">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>غربال اراتستن</h3></div>
+<style>
+#lab-sieve .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-sieve button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-sieve .grid{display:grid;grid-template-columns:repeat(20,minmax(0,1fr));gap:2px;direction:ltr;margin:.6rem auto;max-width:640px}
+@media (max-width:560px){#lab-sieve .grid{grid-template-columns:repeat(10,minmax(0,1fr))}}
+#lab-sieve .c{font-size:.7rem;text-align:center;padding:.2rem 0;border-radius:3px;font-variant-numeric:tabular-nums;transition:background .2s}
+#lab-sieve .p{background:var(--clay);color:#fff;font-weight:700}
+#lab-sieve .x{color:#aaa;text-decoration:line-through}
+#lab-sieve .cur{outline:2px solid var(--ink)}
+#lab-sieve .res{font-weight:600;min-height:1.3em}
+</style>
+<div class="row">
+  <label>تا: <select data-k="N"><option>100</option><option selected>200</option><option>400</option></select></label>
+  <button data-k="step">گام بعد</button>
+  <button data-k="all">همه‌ی گام‌ها</button>
+  <button data-k="reset">از نو</button>
+</div>
+<div class="res" data-k="res" aria-live="polite"></div>
+<div class="grid" data-k="grid"></div>
+<script>
+(function(){
+  var root=document.getElementById('lab-sieve'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var N, state, p;
+  function reset(){ N=+$('N').value; state=[]; for(var i=0;i<=N;i++) state[i]=0; state[1]=2; p=1; draw(null); $('res').textContent='روی «گام بعد» بزنید: کوچک‌ترین عدد خط‌نخورده اول است و مضرب‌هایش خط می‌خورند.'; }
+  function next(){ do{ p++; } while(p<=N && state[p]!==0); return p; }
+  function step(){
+    var q=next(); if(q>N){ finish(); return false; }
+    if(q*q>N){ for(var i=q;i<=N;i++) if(state[i]===0) state[i]=1; draw(null); finish(true,q); return false; }
+    state[q]=1; var c=0; for(var m=q*q;m<=N;m+=q) if(state[m]!==2){ state[m]=2; c++; }
+    draw(q); $('res').textContent=fa(q)+' اول است؛ '+fa(c)+' مضرب تازه‌اش (از '+fa(q*q)+' به بعد) خط خوردند.'; return true; }
+  function finish(early,q){ var cnt=0; for(var i=2;i<=N;i++) if(state[i]===1||state[i]===0){ state[i]=1; cnt++; } draw(null);
+    $('res').textContent=(early?'چون '+fa(q)+'² از '+fa(N)+' بزرگ‌تر است، همه‌ی عددهای باقی‌مانده اول‌اند. ':'')+'تعداد اعداد اول تا '+fa(N)+': '+fa(cnt)+' ؛ مقایسه با N/ln N ≈ '+fa(Math.round(N/Math.log(N))); }
+  function draw(cur){ var s=''; for(var i=1;i<=N;i++){ var cl=state[i]===1?'p':(state[i]===2?'x':''); if(cur&&i===cur) cl+=' cur'; s+='<div class="c '+cl+'">'+i+'</div>'; } $('grid').innerHTML=s; }
+  $('step').onclick=step; $('all').onclick=function(){ while(step()){} }; $('reset').onclick=reset; $('N').onchange=reset;
+  reset();
+})();
+</script>
+</div>

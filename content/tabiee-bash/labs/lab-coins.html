@@ -1,0 +1,49 @@
+<div class="lab" id="lab-coins">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>مسئله‌ی سکه</h3></div>
+<style>
+#lab-coins .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-coins input{font:inherit;width:12em;padding:.2rem .4rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);direction:ltr}
+#lab-coins button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-coins .grid{display:grid;gap:2px;direction:ltr;margin:.6rem auto;max-width:640px}
+#lab-coins .c{font-size:.7rem;text-align:center;padding:.15rem 0;border-radius:3px;font-variant-numeric:tabular-nums}
+#lab-coins .y{background:color-mix(in srgb,var(--clay) 18%,transparent)}
+#lab-coins .n{background:var(--ink);color:var(--paper,#fff)}
+#lab-coins .res{font-weight:600}
+#lab-coins .msg{color:var(--clay);font-weight:600;min-height:1.2em}
+</style>
+<div class="row">
+  <label>ارزش سکه‌ها (با ویرگول جدا کنید): <input type="text" data-k="c" value="7, 11"></label>
+  <button data-k="go">نمایش</button>
+  <button data-v="3,5">۳ و ۵</button><button data-v="7,11">۷ و ۱۱</button><button data-v="6,9,20">۶، ۹، ۲۰</button><button data-v="6,10,15">۶، ۱۰، ۱۵</button>
+</div>
+<div class="msg" data-k="msg"></div>
+<div class="res" data-k="res" aria-live="polite"></div>
+<div class="grid" data-k="grid"></div>
+<div>خانه‌های تیره مبلغ‌هایی‌اند که <b>نمی‌توان</b> پرداخت. هر سطر به اندازه‌ی کوچک‌ترین سکه است؛ به ستون‌ها نگاه کنید: در هر ستون، از جایی به بعد همه چیز قابل‌پرداخت است.</div>
+<script>
+(function(){
+  var root=document.getElementById('lab-coins'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  function gcd(a,b){ while(b){ var t=a%b; a=b; b=t; } return a; }
+  function run(){
+    $('msg').textContent='';
+    var c=$('c').value.replace(/[۰-۹]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d);}).split(/[^0-9]+/).filter(Boolean).map(Number).filter(function(x){return x>0;});
+    if(c.length<1||c.some(function(x){return x>60;})){ $('msg').textContent='یک تا چند سکه با ارزش حداکثر ۶۰ وارد کنید.'; return; }
+    c.sort(function(a,b){return a-b;});
+    var g=c.reduce(gcd); if(g!==1){ $('msg').textContent='ب.م.م سکه‌ها '+fa(g)+' است؛ پس هر مبلغی که مضرب '+fa(g)+' نباشد ناممکن است و بزرگ‌ترین مبلغ ناممکن وجود ندارد.'; }
+    var m=c[0], N=Math.max(m*12, Math.min(c[0]*c[c.length-1]+m, 900)); N=Math.ceil((N+1)/m)*m-1;
+    var ok=[true]; for(var x=1;x<=N;x++){ ok[x]=c.some(function(v){return x>=v&&ok[x-v];}); }
+    var bad=[]; for(x=1;x<=N;x++) if(!ok[x]) bad.push(x);
+    var gr=$('grid'); gr.style.gridTemplateColumns='repeat('+m+',minmax(0,1fr))'; var s='';
+    for(x=0;x<=N;x++) s+='<div class="c '+(ok[x]?'y':'n')+'">'+x+'</div>';
+    gr.innerHTML=s;
+    if(g===1) $('res').textContent='بزرگ‌ترین مبلغ ناممکن: '+fa(bad.length?bad[bad.length-1]:0)+' ، تعداد مبلغ‌های ناممکن: '+fa(bad.length)+(c.length===2?' (فرمول سیلوستر: '+fa(c[0]*c[1]-c[0]-c[1])+' و '+fa((c[0]-1)*(c[1]-1)/2)+')':'');
+    else $('res').textContent='';
+  }
+  $('go').onclick=run;
+  root.querySelectorAll('[data-v]').forEach(function(b){ b.onclick=function(){ $('c').value=b.getAttribute('data-v'); run(); }; });
+  run();
+})();
+</script>
+</div>

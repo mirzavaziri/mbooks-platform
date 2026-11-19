@@ -64,7 +64,7 @@ export function renderBlock(block: { id: string; type: string; fields: any }, de
     const anchorId = entry?.anchorId ?? `env-${block.id}`;
     const titled = f.title ? `${display} (${renderInline(f.title, ctx)})` : display;
     const paragraphs = renderBody(f.body ?? '', ctx);
-    const withLead = leadParagraphWith(paragraphs, `<strong>${titled}.</strong> `);
+    const withLead = withEndMark(leadParagraphWith(paragraphs, `<strong>${titled}.</strong> `), END_MARK[block.type]);
     return `<div id="${anchorId}" class="env env-${block.type}">\n${withLead}\n</div>`;
   }
 
@@ -87,7 +87,7 @@ export function renderBlock(block: { id: string; type: string; fields: any }, de
         ? `<em>${f.heading ? word : PROOF_OF_WORD[lang]} <a href="#${target.anchorId}">${target.display}</a>.</em> `
         : `<em>${word}.</em> `;
       const paragraphs = renderBody(f.body ?? '', ctx);
-      return `<div class="proofblock">\n${leadParagraphWith(paragraphs, lead)}\n</div>`;
+      return `<div class="proofblock">\n${withEndMark(leadParagraphWith(paragraphs, lead), '■')}\n</div>`;
     }
 
     case 'exercise':
@@ -123,6 +123,27 @@ export function renderBlock(block: { id: string; type: string; fields: any }, de
     default:
       return `<!-- unrecognized block type: ${escapeAttr(block.type)} -->`;
   }
+}
+
+// End-of-block marks, the same ones the studio preview draws: definition
+// ♣, example ♠, remark ♦, principle ■, and ■ at the end of a proof.
+// Authors never type them (see docs/author-guide.md).
+const END_MARK: Record<string, string | undefined> = {
+  definition: '♣',
+  example: '♠',
+  remark: '♦',
+  principle: '■',
+};
+
+// Puts the mark at the end of the block's last line (inside its last
+// paragraph, floated to the line's end), or on its own line when the block
+// ends with a list or table instead of a paragraph.
+function withEndMark(html: string, mark: string | undefined): string {
+  if (!mark) return html;
+  const span = `<span class="endmark" aria-hidden="true">${mark}</span>`;
+  const trimmed = html.trimEnd();
+  if (trimmed.endsWith('</p>')) return trimmed.slice(0, -'</p>'.length) + span + '</p>';
+  return `${trimmed}\n<p class="endmark-line">${span}</p>`;
 }
 
 // Inserts `lead` (an inline HTML fragment, e.g. "<strong>Theorem 1.1.5.</strong> ")

@@ -1,0 +1,47 @@
+<div class="lab" id="lab-powers">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>جدول توان‌ها و ریشه‌های اولیه</h3></div>
+<style>
+#lab-powers .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-powers input{font:inherit;width:5em;padding:.2rem .4rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink)}
+#lab-powers button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-powers .wrap{overflow:auto;max-width:100%}
+#lab-powers table{border-collapse:collapse;margin:.6rem auto;direction:ltr;font-variant-numeric:tabular-nums}
+#lab-powers td,#lab-powers th{min-width:1.9em;height:1.6em;text-align:center;font-size:.72rem;border:1px solid var(--rule);padding:0 .15rem}
+#lab-powers th{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+#lab-powers td.one{background:var(--ink);color:var(--paper,#fff);font-weight:700}
+#lab-powers tr.prim th{background:var(--clay);color:#fff}
+#lab-powers .res{font-weight:600;min-height:1.3em}
+#lab-powers .msg{color:var(--clay);font-weight:600;min-height:1.2em}
+</style>
+<div class="row">
+  <label>پیمانه n: <input type="number" data-k="n" value="13" min="2" max="40"></label>
+  <button data-k="go">نمایش</button>
+  <button data-v="13">۱۳</button><button data-v="18">۱۸</button><button data-v="15">۱۵</button><button data-v="16">۱۶</button><button data-v="23">۲۳</button>
+</div>
+<div class="msg" data-k="msg"></div>
+<div class="res" data-k="res" aria-live="polite"></div>
+<div class="wrap"><table data-k="tab"></table></div>
+<div>سطر a و ستون k مقدار a^k به پیمانه‌ی n را نشان می‌دهد (فقط برای a نسبت به n اول). خانه‌های تیره ۱ هستند؛ اولین خانه‌ی تیره‌ی هر سطر، مرتبه‌ی a است. سطرهای رنگی ریشه‌های اولیه‌اند.</div>
+<script>
+(function(){
+  var root=document.getElementById('lab-powers'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  function gcd(a,b){ while(b){ var t=a%b; a=b; b=t; } return a; }
+  function run(){
+    var n=Math.floor(+$('n').value); $('msg').textContent='';
+    if(!(n>=2&&n<=40)){ $('msg').textContent='n را بین ۲ و ۴۰ بگیرید.'; return; }
+    var units=[]; for(var a=1;a<n;a++) if(gcd(a,n)===1) units.push(a);
+    var phi=units.length, t='<tr><th>a \\ k</th>'; for(var k=1;k<=phi;k++) t+='<th>'+k+'</th>'; t+='<th>ord</th></tr>';
+    var prim=[];
+    units.forEach(function(a){ var x=1, ord=0, cells=''; for(var k=1;k<=phi;k++){ x=x*a%n; if(x===1&&!ord) ord=k; cells+='<td class="'+(x===1?'one':'')+'">'+x+'</td>'; }
+      if(ord===phi) prim.push(a); t+='<tr class="'+(ord===phi?'prim':'')+'"><th>'+a+'</th>'+cells+'<th>'+ord+'</th></tr>'; });
+    $('tab').innerHTML=t;
+    $('res').textContent='φ('+fa(n)+') = '+fa(phi)+' ؛ '+(prim.length? 'ریشه‌های اولیه: '+fa(prim.join('، '))+' (تعداد '+fa(prim.length)+' = φ(φ(n)))' : 'ریشه‌ی اولیه وجود ندارد: هیچ سطری تا انتها بدون ۱ نمی‌رود.');
+  }
+  $('go').onclick=run;
+  root.querySelectorAll('[data-v]').forEach(function(b){ b.onclick=function(){ $('n').value=b.getAttribute('data-v'); run(); }; });
+  run();
+})();
+</script>
+</div>

@@ -1,0 +1,55 @@
+<div class="lab" id="lab-euclid">
+<div class="lab-head"><span class="lab-kicker">آزمایشگاه تعاملی</span><h3>الگوریتم اقلیدس با مربع‌ها</h3></div>
+<style>
+#lab-euclid .row{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin:.4rem 0}
+#lab-euclid input{font:inherit;width:6.5em;padding:.2rem .4rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink)}
+#lab-euclid button{font:inherit;padding:.25rem .8rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper,#fff);color:var(--ink);cursor:pointer}
+#lab-euclid svg{width:100%;max-width:640px;height:auto;display:block;margin:.6rem auto}
+#lab-euclid table{border-collapse:collapse;margin:.4rem auto;font-variant-numeric:tabular-nums;direction:ltr}
+#lab-euclid td{padding:.1rem .5rem;border-bottom:1px solid var(--rule);text-align:right;direction:ltr;unicode-bidi:isolate}
+#lab-euclid .res{font-weight:600}
+#lab-euclid .msg{color:var(--clay);font-weight:600;min-height:1.2em}
+</style>
+<div class="row">
+  <label>a: <input type="number" data-k="a" value="2026"></label>
+  <label>b: <input type="number" data-k="b" value="1404"></label>
+  <button data-k="go">اجرا</button>
+  <button data-k="fib">بدترین حالت: دو فیبوناچی متوالی</button>
+</div>
+<div class="msg" data-k="msg"></div>
+<svg data-k="svg" role="img" aria-label="مستطیل a در b که با مربع‌های هر گام الگوریتم پر شده است"></svg>
+<table data-k="tab"></table>
+<div class="res" data-k="res" aria-live="polite"></div>
+<script>
+(function(){
+  var root=document.getElementById('lab-euclid'); if(!root) return;
+  var $=function(k){return root.querySelector('[data-k="'+k+'"]');};
+  var fa=function(x){return String(x).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});};
+  var COL=['#c0392b','#2980b9','#27ae60','#d4a017','#8e44ad','#d35400','#16a085','#7f5539'];
+  function run(){
+    var a=Math.floor(+$('a').value), b=Math.floor(+$('b').value); $('msg').textContent='';
+    if(!(a>0&&b>0&&a<=1e9&&b<=1e9)){ $('msg').textContent='دو عدد طبیعی (تا یک میلیارد) وارد کنید.'; return; }
+    if(a<b){ var t=a; a=b; b=t; }
+    var steps=[], x=a, y=b; while(y){ steps.push([x,Math.floor(x/y),y,x%y]); var r=x%y; x=y; y=r; }
+    var g=x, rows='';
+    steps.forEach(function(s){ rows+='<tr><td>'+s[0]+'</td><td>= '+s[1]+' × '+s[2]+'</td><td>+ '+s[3]+'</td></tr>'; });
+    $('tab').innerHTML=rows;
+    var r0=a,r1=b,s0=1,s1=0,t0=0,t1=1; while(r1){ var q=Math.floor(r0/r1),tt; tt=r0-q*r1; r0=r1; r1=tt; tt=s0-q*s1; s0=s1; s1=tt; tt=t0-q*t1; t0=t1; t1=tt; }
+    $('res').innerHTML='ب.م.م = '+fa(g)+' ، تعداد گام‌های تقسیم = '+fa(steps.length)+' ، و بزو: <bdi dir="ltr">'+a+'·('+s0+') + '+b+'·('+t0+') = '+g+'</bdi>';
+    var W=620, sc=W/a, H=Math.max(b*sc,4), svg=$('svg'); svg.setAttribute('viewBox','0 0 '+(W+2)+' '+(H+2));
+    var s='', X=0, Y=0, w=a, h=b, k=0, horiz=true;
+    steps.forEach(function(st,i){ var side=st[2], cnt=st[1];
+      for(var j=0;j<cnt;j++){ var px=side*sc; if(px<0.25) break;
+        if(horiz){ s+='<rect x="'+(1+X*sc)+'" y="'+(1+Y*sc)+'" width="'+px+'" height="'+px+'" fill="'+COL[i%8]+'" fill-opacity=".75" stroke="#fff" stroke-width="'+(px>6?1:0)+'"/>'; X+=side; }
+        else { s+='<rect x="'+(1+X*sc)+'" y="'+(1+Y*sc)+'" width="'+px+'" height="'+px+'" fill="'+COL[i%8]+'" fill-opacity=".75" stroke="#fff" stroke-width="'+(px>6?1:0)+'"/>'; Y+=side; }
+      }
+      horiz=!horiz; });
+    s+='<rect x="1" y="1" width="'+(a*sc)+'" height="'+(b*sc)+'" fill="none" stroke="var(--ink)" stroke-width="1"/>';
+    svg.innerHTML=s;
+  }
+  $('go').onclick=run;
+  $('fib').onclick=function(){ var F=[1,1]; while(F.length<16) F.push(F[F.length-1]+F[F.length-2]); $('a').value=F[15]; $('b').value=F[14]; run(); };
+  run();
+})();
+</script>
+</div>
