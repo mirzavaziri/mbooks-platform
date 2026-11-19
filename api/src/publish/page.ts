@@ -335,7 +335,11 @@ export const CLIENT_JS = `
     var ans = parseFloat(atob(f.dataset.a)), tol = parseFloat(f.dataset.tol || "0");
     f.addEventListener("submit", function (e) {
       e.preventDefault();
-      var out = $("output", f), raw = $("input", f).value.trim().replace(/,/g, "");
+      var out = $("output", f), raw = $("input", f).value.trim()
+        // Persian (۰-۹) and Arabic (٠-٩) digits, as a Persian phone keyboard types them.
+        .replace(/[۰-۹]/g, function (d) { return String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)); })
+        .replace(/[٠-٩]/g, function (d) { return String("٠١٢٣٤٥٦٧٨٩".indexOf(d)); })
+        .replace(/٫/g, ".").replace(/[,٬]/g, "").replace(/−/g, "-");
       if (!raw) { out.textContent = "..."; out.className = "no"; return; }
       var v = Number(raw);
       var ok = !isNaN(v) && Math.abs(v - ans) <= tol + 1e-12;
@@ -353,15 +357,17 @@ export const CLIENT_JS = `
   groups.forEach(function (g) {
     var tags = {};
     g.exs.forEach(function (ex) { $$(".ex-tag", ex).forEach(function (t) { tags[t.textContent] = true; }); });
-    var names = Object.keys(tags); if (names.length < 2) return;
+    // A filter only helps with several exercises to choose among.
+    var names = Object.keys(tags); if (names.length < 2 || g.exs.length < 2) return;
+    var ALL = document.documentElement.lang === "fa" ? "همه" : "All";
     var bar = document.createElement("div"); bar.className = "filter-bar";
-    ["All"].concat(names).forEach(function (n) {
+    [ALL].concat(names).forEach(function (n) {
       var b = document.createElement("button"); b.type = "button"; b.textContent = n;
-      b.setAttribute("aria-pressed", n === "All" ? "true" : "false");
+      b.setAttribute("aria-pressed", n === ALL ? "true" : "false");
       b.addEventListener("click", function () {
         $$("button", bar).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
         g.exs.forEach(function (ex) {
-          ex.hidden = !(n === "All" || $$(".ex-tag", ex).some(function (t) { return t.textContent === n; }));
+          ex.hidden = !(n === ALL || $$(".ex-tag", ex).some(function (t) { return t.textContent === n; }));
         });
       });
       bar.appendChild(b);
@@ -372,7 +378,7 @@ export const CLIENT_JS = `
   var cont = $(".contents");
   if (cont) {
     var tools = document.createElement("div"); tools.className = "page-tools";
-    tools.innerHTML = '<a href="#contents">Contents</a>';
+    tools.innerHTML = '<a href="#contents">' + (document.documentElement.lang === "fa" ? "فهرست" : "Contents") + '</a>';
     document.body.appendChild(tools);
   }
 })();

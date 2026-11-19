@@ -185,7 +185,7 @@ function renderExercise(blockId: string, f: any, deps: RenderDeps): string {
 
   const checkForm =
     f.answer && String(f.answer).trim() !== ''
-      ? `<form class="check" data-a="${base64(String(f.answer))}" data-tol="${escapeAttr(String(f.tol ?? '0'))}"><label for="chk-${blockId}">${renderInline(f.prompt ?? '', ctx)}</label><input id="chk-${blockId}" inputmode="decimal" autocomplete="off"><button type="submit">${CHECK_BUTTON[lang]}</button><output aria-live="polite"></output></form>`
+      ? `<form class="check" data-a="${base64(String(f.answer))}" data-tol="${escapeAttr(String(f.tol ?? '0'))}"><label for="chk-${blockId}">${renderInline(f.prompt ?? '', ctx)}</label><input id="chk-${blockId}" inputmode="decimal" autocomplete="off"><button type="submit">${CHECK_BUTTON[lang]}</button><output aria-live="polite" data-ok="${escapeAttr(CORRECT_WORD[lang])}" data-no="${escapeAttr(INCORRECT_WORD[lang])}"></output></form>`
       : '';
 
   return `<div id="${anchorId}" class="exercise">\n${leadHtml}\n${hintsHtml}\n${solutionHtml}\n${checkForm}\n</div>`;
