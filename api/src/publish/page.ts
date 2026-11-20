@@ -69,10 +69,9 @@ h3{ font-size:1.18rem; font-weight:600; margin:2rem 0 .5rem }
 .env.env-definition{ background:var(--moss-wash) }
 .env.env-example{ background:var(--slate-wash) }
 .env.env-remark{ background:var(--clay-wash) }
-.env.env-definition::after,.env.env-example::after,.env.env-remark::after{ position:absolute; inset-inline-end:.8rem; bottom:.4rem; font-size:1.05rem }
-.env.env-definition::after{ content:"\\2663"; color:var(--moss) } .env.env-example::after{ content:"\\2660"; color:var(--slate) } .env.env-remark::after{ content:"\\2666"; color:var(--clay) }
+/* end marks (♣ ♠ ♦ ■) come from the renderer as .endmark spans; the
+   theme used to draw them too, so every block showed its mark twice */
 .proofblock{ margin:.8rem 0 1.3rem }
-.proofblock > p:last-child::after{ content:"\\25A0"; float:inline-end; font-size:.8rem; margin-top:.35rem }
 
 .math.display{ display:block; overflow-x:auto; overflow-y:hidden }
 mjx-container[display="true"]{ overflow-x:auto; overflow-y:hidden; max-width:100% }
@@ -155,6 +154,8 @@ details.reveal[open] summary{ margin-bottom:.2rem }
 .column-margin{ font-size:.86rem; line-height:1.5; color:var(--ink-2); border-top:2px solid var(--moss); padding-top:.5rem; margin-top:.35rem }
 .column-margin p{ margin:.2rem 0 }
 .column-margin strong{ color:var(--ink) }
+.mnote .portrait{ margin:0 0 .4rem } .mnote .portrait img{ display:block; width:5.5rem; max-width:100%; height:auto; border-radius:3px }
+.mnote .latin{ font-style:italic; color:var(--ink-3, var(--ink-2)) } .mnote .credit{ font-size:.72rem; color:var(--ink-3, var(--ink-2)) }
 .mnote blockquote{ margin:.45rem 0 0; padding:0; border-inline-start:2px solid var(--clay); padding-inline-start:.6rem; font-style:italic; color:var(--ink) }
 .mnote blockquote p:last-child{ font-style:normal; font-size:.8rem; color:var(--ink-2) }
 .mnote.quote blockquote{ border-inline-start:0; padding:0; font-size:1rem; font-family:var(--f-body) }

@@ -214,10 +214,18 @@ function renderMarginNote(type: string, f: any, deps: RenderDeps): string {
   const { ctx, lang } = deps;
   let inner = '';
   if (type === 'person') {
-    inner = `<p><strong>${renderInline(f.name ?? '', ctx)}</strong>${f.years ? ` (${escapeHtml(f.years)})` : ''}</p>`;
+    // Portrait, Latin-script name and portrait credit, as the studio
+    // preview shows them (these fields were dropped on publish before).
+    const portrait = f.image ? deps.resolveAsset(f.image) : null;
+    if (portrait) inner += `<p class="portrait"><img src="${escapeAttr(portrait.url)}" alt="${escapeAttr(f.name ?? '')}" loading="lazy"></p>`;
+    const latin = f.latin ? ` <span class="latin" dir="ltr">${escapeHtml(f.latin)}</span>` : '';
+    inner += `<p><strong>${renderInline(f.name ?? '', ctx)}</strong>${latin}${f.years ? ` (${escapeHtml(f.years)})` : ''}</p>`;
     if (f.bio) inner += `<p>${renderInline(f.bio, ctx)}</p>`;
     if (f.quote) {
       inner += `<blockquote><p>${renderInline(f.quote, ctx)}</p>${f.qsource ? `<p>${escapeHtml(f.qsource)}</p>` : ''}</blockquote>`;
+    }
+    if (portrait && f.credit) {
+      inner += `<p class="credit">${lang === 'fa' ? 'تصویر' : 'Portrait'}: ${escapeHtml(f.credit)}</p>`;
     }
   } else if (type === 'history') {
     inner = `<p>${renderInline(f.body ?? '', ctx)}</p>`;
