@@ -210,10 +210,15 @@ export function renderPage(meta: PageMeta, tocHtml: string, bodyHtml: string, fo
     meta.lang === 'en'
       ? `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Alegreya+Sans+SC:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">`
       : '';
-  const bodyFontStack = meta.bodyFont
-    ? `"${meta.bodyFont}", Tahoma, sans-serif`
-    : meta.lang === 'fa'
-      ? 'Tahoma, sans-serif'
+  // Persian books use the arith.land faces: Yekan Bakh for text, Kamand for
+  // headings and labels (both draw the Persian zero hollow; Tahoma's is a
+  // solid dot). A book keeps its own body font only when it uploaded one.
+  const FA_BODY = '"Yekan Bakh", Vazirmatn, Tahoma, sans-serif';
+  const ownFont = !!meta.bodyFont && (meta.fonts ?? []).some((f) => f.family === meta.bodyFont);
+  const bodyFontStack = meta.lang === 'fa'
+    ? (ownFont ? `"${meta.bodyFont}", ${FA_BODY}` : FA_BODY)
+    : meta.bodyFont
+      ? `"${meta.bodyFont}", Tahoma, sans-serif`
       : '"Source Serif 4", "Iowan Old Style", Georgia, serif';
 
   const authorsHtml = meta.authors.map((a) => `<p class="author">${a}</p>`).join('\n');
@@ -222,7 +227,7 @@ export function renderPage(meta: PageMeta, tocHtml: string, bodyHtml: string, fo
 ${googleFonts}
 <title>${escapeHtml(meta.title)}</title>
 ${meta.blockCrawlers ? '<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai">' : ''}
-<style>:root{--f-body:${bodyFontStack}}${fontFaceCss(meta.fonts)}${BASE_CSS}</style>
+<style>:root{--f-body:${bodyFontStack}}${meta.lang === 'fa' ? FA_FONTS_CSS : ''}${fontFaceCss(meta.fonts)}${BASE_CSS}${meta.lang === 'fa' ? FA_TYPE_CSS : ''}</style>
 <script>${MATHJAX_BOOT}</script>
 </head><body data-theme="light"${meta.fiction ? ' class="fiction"' : ''}>
 <div id="dir-root" dir="${dirAttr}">
@@ -404,4 +409,23 @@ export const CLIENT_JS = `
     document.body.appendChild(tools);
   }
 })();
+`;
+
+// Served from /vendor/fonts on mbooks (copied from the arith.land frontend).
+const FA_FONTS_CSS = [
+  ['Yekan Bakh', 'YekanBakh-Regular', '400'],
+  ['Yekan Bakh', 'YekanBakh-Medium', '500'],
+  ['Yekan Bakh', 'YekanBakh-Bold', '600 900'],
+  ['Kamand', 'Kamand-Regular', '400'],
+  ['Kamand', 'Kamand-Medium', '500 600'],
+  ['Kamand', 'Kamand-Bold', '700 900'],
+]
+  .map(([family, file, weight]) => `@font-face{ font-family:"${family}"; src:url("/vendor/fonts/${file}.woff2") format("woff2"); font-weight:${weight}; font-display:swap }`)
+  .join('');
+
+const FA_TYPE_CSS = `
+:root{ --f-label:"Kamand", "Yekan Bakh", Tahoma, sans-serif }
+#title-block-header .title, h2, h3, h4{ font-family:"Kamand", "Yekan Bakh", Tahoma, sans-serif }
+/* letter-spacing pulls joined Persian letters apart */
+[dir="rtl"], [dir="rtl"] *{ letter-spacing:normal !important }
 `;
