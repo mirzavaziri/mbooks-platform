@@ -50,13 +50,17 @@ export async function renderBookToHtml(bookId: string): Promise<PublishResult> {
     [bookId],
   );
   const assetByBaseName = new Map<string, string>();
+  const assetIds = new Set<string>();
   for (const a of assetsRes.rows as { id: string; filename: string }[]) {
+    assetIds.add(a.id.toLowerCase());
     const base = a.filename.replace(/\.[a-zA-Z0-9]+$/, '').toLowerCase();
     if (base) assetByBaseName.set(base, a.id);
   }
+  // Imported books refer to images by file name; an image added in the
+  // studio is stored by its asset id instead, so accept either.
   const resolveAsset: AssetResolver = (ref) => {
     const key = ref.replace(/^local:/, '').toLowerCase();
-    const id = assetByBaseName.get(key);
+    const id = assetByBaseName.get(key) ?? (assetIds.has(key) ? key : undefined);
     return id ? { url: `/_blob/${id}` } : null;
   };
 
