@@ -426,6 +426,8 @@ const FA_FONTS_CSS = [
 const FA_TYPE_CSS = `
 :root{ --f-label:"Kamand", "Yekan Bakh", Tahoma, sans-serif }
 #title-block-header .title, h2, h3, h4{ font-family:"Kamand", "Yekan Bakh", Tahoma, sans-serif }
+/* list numbers in Persian digits, like the rest of the book */
+[dir="rtl"] ol{ list-style-type:persian }
 /* letter-spacing pulls joined Persian letters apart */
 [dir="rtl"], [dir="rtl"] *{ letter-spacing:normal !important }
 `;
