@@ -230,8 +230,12 @@ function renderMarginNote(type: string, f: any, deps: RenderDeps): string {
   } else if (type === 'history') {
     inner = `<p>${renderInline(f.body ?? '', ctx)}</p>`;
   } else if (type === 'quote') {
-    const byline = [f.author, f.source].filter(Boolean).join(lang === 'fa' ? '، ' : ', ');
-    inner = `<blockquote><p>${renderInline(f.text ?? '', ctx)}</p>${byline ? `<p>${escapeHtml(byline)}</p>` : ''}</blockquote>`;
+    // Optional portrait and years, as in the studio preview.
+    const portrait = f.image ? deps.resolveAsset(f.image) : null;
+    if (portrait) inner += `<p class="portrait"><img src="${escapeAttr(portrait.url)}" alt="${escapeAttr(f.author ?? '')}" loading="lazy"></p>`;
+    const who = f.author && f.years ? `${f.author} (${f.years})` : f.author;
+    const byline = [who, f.source].filter(Boolean).join(lang === 'fa' ? '، ' : ', ');
+    inner += `<blockquote><p>${renderInline(f.text ?? '', ctx)}</p>${byline ? `<p>${escapeHtml(byline)}</p>` : ''}</blockquote>`;
   } else {
     // aside (Persian): a main note, plus optional "why"/"more" asides
     // each behind their own small reveal.
