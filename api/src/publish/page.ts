@@ -177,6 +177,9 @@ h1{ font-size:clamp(1.7rem,3.6vw,2.3rem); font-weight:600; line-height:1.15; mar
 .contents ul{ margin:.4rem 0 0; padding-inline-start:1.1rem } .contents li{ margin:.15rem 0 }
 .contents a{ text-decoration:none; color:var(--ink) } .contents a:hover{ color:var(--clay); text-decoration:underline }
 .page-tools{ position:fixed; inset-inline-end:calc(16px + env(safe-area-inset-right,0px)); bottom:calc(16px + env(safe-area-inset-bottom,0px)); z-index:30 }
+#title-block-header .home-link{ order:-2; justify-self:start; font-family:var(--f-label); font-size:.85rem; color:var(--moss); text-decoration:none; margin-bottom:.6rem }
+#title-block-header .home-link::before{ content:"← "; } [dir="rtl"] #title-block-header .home-link::before{ content:"→ " }
+#title-block-header .home-link:hover{ text-decoration:underline }
 .page-tools a{ display:inline-block; font-family:var(--f-label); letter-spacing:.05em; font-size:.85rem; background:var(--sheet); border:1px solid var(--rule); border-radius:99px; padding:.25rem .8rem; color:var(--moss); text-decoration:none; box-shadow:0 4px 14px rgba(15,25,40,.12) }
 @media (prefers-reduced-motion: reduce){ *{ scroll-behavior:auto !important; transition:none !important } }
 
@@ -232,6 +235,7 @@ ${meta.blockCrawlers ? '<meta name="robots" content="noindex, nofollow, noarchiv
 </head><body data-theme="light"${meta.fiction ? ' class="fiction"' : ''}>
 <div id="dir-root" dir="${dirAttr}">
 <header id="title-block-header">
+<a class="home-link" href="/">${meta.lang === 'fa' ? 'همه‌ی کتاب‌های ام‌بوک' : 'All mbooks'}</a>
 <h1 class="title">${escapeHtml(meta.title)}</h1>
 ${meta.subtitle ? `<p class="subtitle">${escapeHtml(meta.subtitle)}</p>` : ''}
 ${authorsHtml}
@@ -405,14 +409,15 @@ export const CLIENT_JS = `
   var cont = $(".contents");
   if (cont) {
     var tools = document.createElement("div"); tools.className = "page-tools";
-    tools.innerHTML = '<a href="#contents">' + (document.documentElement.lang === "fa" ? "فهرست" : "Contents") + '</a>';
+    var fa = document.documentElement.lang === "fa";
+    tools.innerHTML = '<a href="/">' + (fa ? "همه‌ی کتاب‌ها" : "All books") + '</a> <a href="#contents">' + (fa ? "فهرست" : "Contents") + '</a>';
     document.body.appendChild(tools);
   }
 })();
 `;
 
 // Served from /vendor/fonts on mbooks (copied from the arith.land frontend).
-const FA_FONTS_CSS = [
+export const FA_FONTS_CSS = [
   ['Yekan Bakh', 'YekanBakh-Regular', '400'],
   ['Yekan Bakh', 'YekanBakh-Medium', '500'],
   ['Yekan Bakh', 'YekanBakh-Bold', '600 900'],

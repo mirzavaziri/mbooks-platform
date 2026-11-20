@@ -17,6 +17,7 @@ import publishRoutes from './routes/publish.js';
 import donateRoutes from './routes/donate.js';
 import { currentUser, roleInBook } from './lib/auth.js';
 import { pool } from './db/pool.js';
+import { FA_FONTS_CSS } from './publish/page.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const studioDir = process.env.MBOOKS_STUDIO_DIR ?? join(here, '..', '..', 'studio');
@@ -110,9 +111,11 @@ app.get('/', async (_request, reply) => {
 <style>
   :root{ color-scheme: light dark; --paper:#f7f8f6; --sheet:#fdfdfb; --ink:#1f2a44; --ink-2:#4a5570; --rule:#d9ddd8; --moss:#2f6b5a; }
   @media (prefers-color-scheme: dark){ :root{ --paper:#11151d; --sheet:#161b25; --ink:#e3e6ec; --ink-2:#a9b1c2; --rule:#2c3442; --moss:#7fc2ab; } }
-  body{ font-family: Tahoma, "Vazirmatn", sans-serif; background:var(--paper); color:var(--ink); margin:0; padding:2rem 1.2rem; }
+  ${FA_FONTS_CSS}
+  body{ font-family: "Yekan Bakh", "Vazirmatn", Tahoma, sans-serif; background:var(--paper); color:var(--ink); margin:0; padding:2rem 1.2rem; }
   .wrap{ max-width:46rem; margin:0 auto; }
-  h1{ font-size:1.5rem; margin:0 0 .3rem }
+  h1, .card h2{ font-family: "Kamand", "Yekan Bakh", Tahoma, sans-serif; }
+  h1{ font-size:1.7rem; margin:0 0 .3rem }
   .lede{ color:var(--ink-2); margin:0 0 2rem; font-size:.95rem }
   .grid{ display:grid; gap:1rem; grid-template-columns:repeat(auto-fill, minmax(14rem, 1fr)); }
   .card{ display:block; background:var(--sheet); border:1px solid var(--rule); border-radius:10px; padding:1.1rem 1.2rem; text-decoration:none; color:inherit; }
