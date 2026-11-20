@@ -231,7 +231,7 @@ ${googleFonts}
 <title>${escapeHtml(meta.title)}</title>
 ${meta.blockCrawlers ? '<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai">' : ''}
 <style>:root{--f-body:${bodyFontStack}}${meta.lang === 'fa' ? FA_FONTS_CSS : ''}${fontFaceCss(meta.fonts)}${BASE_CSS}${meta.lang === 'fa' ? FA_TYPE_CSS : ''}</style>
-<script>${MATHJAX_BOOT}</script>
+<script>${meta.lang === 'fa' ? 'window.__mjScale=1.25;' : ''}${MATHJAX_BOOT}</script>
 </head><body data-theme="light"${meta.fiction ? ' class="fiction"' : ''}>
 <div id="dir-root" dir="${dirAttr}">
 <header id="title-block-header">
@@ -256,7 +256,7 @@ ${bodyHtml}
 // horizontally scrollable line (class mjx-wide) instead of pushing the
 // whole page wider than a phone screen; re-checked on resize/rotation.
 const MATHJAX_BOOT = `
-window.MathJax = { startup: { pageReady: function () {
+window.MathJax = { svg: { scale: window.__mjScale || 1 }, startup: { pageReady: function () {
   return MathJax.startup.defaultPageReady().then(function () {
     function markWide() {
       document.querySelectorAll('mjx-container:not([display="true"])').forEach(function (m) {
